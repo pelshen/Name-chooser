@@ -4,7 +4,7 @@
   "description": "Name chooser app for Slack",
   "main": "index.js",
   "scripts": {
-    "test": "exit 1"
+    "test": "exit 0"
   },
   "author": "",
   "license": "ISC",
