@@ -1,10 +1,16 @@
-const { App } = require('@slack/bolt');
+import { App } from '@slack/bolt';
+import { installationStore } from 'installationStore.js';
 
 require('dotenv').config();
+
 // Initializes your app with your bot token and signing secret
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  clientId: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  stateSecret: '979ad718-cd06-4ab2-8c13-ad2bf04da98b',
+  scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read'],
+  installationStore: installationStore,
 });
 
 const userSelectBlockId = "multi_user_select_block";
