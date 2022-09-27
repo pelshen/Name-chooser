@@ -1,10 +1,9 @@
-import { App } from '@slack/bolt';
-import { installationStore } from 'installationStore.js';
+import Bolt from '@slack/bolt';
 
-require('dotenv').config();
+import { installationStore } from './installationStore.js';
 
 // Initializes your app with your bot token and signing secret
-const app = new App({
+const app = new Bolt.App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   clientId: process.env.SLACK_CLIENT_ID,
   clientSecret: process.env.SLACK_CLIENT_SECRET,

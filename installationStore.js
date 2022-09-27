@@ -1,8 +1,7 @@
+import { TableClient } from "@azure/data-tables";
 
-import { TableServiceClient } from "@azure/data-tables";
-
-const tableService = new TableServiceClient();
-await tableService.createTable("installations");
+const tableClient = TableClient.fromConnectionString(process.env.AZURE_TABLES_ENDPOINT, "installations");
+await tableClient.createTable();
 const buildEntity = (partitionKey, rowKey, entityData) => {partitionKey, rowKey, entityData};
 
 export const installationStore = {
@@ -11,11 +10,11 @@ export const installationStore = {
       // Change the lines below so they save to your database
       if (installation.isEnterpriseInstall && installation.enterprise !== undefined) {
         // handle storing org-wide app installation
-        return await tableService.upsertEntity(buildEntity('enterprise', installation.enterprise.id, installation), "Replace");
+        return await tableClient.upsertEntity(buildEntity('enterprise', installation.enterprise.id, installation), "Replace");
       }
       if (installation.team !== undefined) {
         // single team app installation
-        return await tableService.upsertEntity(buildEntity('team', installation.team.id, installation), "Replace");
+        return await tableClient.upsertEntity(buildEntity('team', installation.team.id, installation), "Replace");
       }
       throw new Error('Failed saving installation data to installationStore');
     },
@@ -24,11 +23,11 @@ export const installationStore = {
       // Change the lines below so they fetch from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // handle org wide app installation lookup
-        return await tableService.getEntity('enterprise', installQuery.enterpriseId);
+        return await tableClient.getEntity('enterprise', installQuery.enterpriseId);
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation lookup
-        return await tableService.getEntity('team', installQuery.enterpriseId);
+        return await tableClient.getEntity('team', installQuery.enterpriseId);
       }
       throw new Error('Failed fetching installation');
     },
@@ -37,11 +36,11 @@ export const installationStore = {
       // Change the lines below so they delete from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // org wide app installation deletion
-        return await tableService.deleteEntity('enterprise', installQuery.enterpriseId);
+        return await tableClient.deleteEntity('enterprise', installQuery.enterpriseId);
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation deletion
-        return await tableService.deleteEntity('team', installQuery.enterpriseId);
+        return await tableClient.deleteEntity('team', installQuery.enterpriseId);
       }
       throw new Error('Failed to delete installation');
     },
