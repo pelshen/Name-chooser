@@ -2,7 +2,7 @@ import { TableClient } from "@azure/data-tables";
 
 const tableClient = TableClient.fromConnectionString(process.env.AZURE_TABLES_ENDPOINT, "installations");
 await tableClient.createTable();
-const buildEntity = (partitionKey, rowKey, entityData) => {partitionKey, rowKey, entityData};
+const buildEntity = (partitionKey, rowKey, entityData) => ({partitionKey, rowKey, entityData});
 
 export const installationStore = {
     storeInstallation: async (installation) => {
