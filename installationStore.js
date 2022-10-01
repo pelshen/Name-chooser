@@ -10,11 +10,11 @@ export const installationStore = {
       // Change the lines below so they save to your database
       if (installation.isEnterpriseInstall && installation.enterprise !== undefined) {
         // handle storing org-wide app installation
-        return await tableClient.upsertEntity(buildEntity('enterprise', installation.enterprise.id, installation), "Replace");
+        return await tableClient.upsertEntity(buildEntity('enterprise', installation.enterprise.id, JSON.stringify(installation)), "Replace");
       }
       if (installation.team !== undefined) {
         // single team app installation
-        return await tableClient.upsertEntity(buildEntity('team', installation.team.id, installation), "Replace");
+        return await tableClient.upsertEntity(buildEntity('team', installation.team.id, JSON.stringify(installation)), "Replace");
       }
       throw new Error('Failed saving installation data to installationStore');
     },
@@ -23,11 +23,11 @@ export const installationStore = {
       // Change the lines below so they fetch from your database
       if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
         // handle org wide app installation lookup
-        return await tableClient.getEntity('enterprise', installQuery.enterpriseId);
+        return JSON.parse((await tableClient.getEntity('enterprise', installQuery.enterpriseId)).entityData);
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation lookup
-        return await tableClient.getEntity('team', installQuery.enterpriseId);
+        return JSON.parse((await tableClient.getEntity('team', installQuery.enterpriseId)).entityData);
       }
       throw new Error('Failed fetching installation');
     },
