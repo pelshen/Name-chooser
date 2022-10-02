@@ -258,7 +258,7 @@ app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
   const max = namesSelection.length;
 
   // Message to send user
-  let msg = `<@${namesSelection[getRandomInt(0, max)]}> was chosen at random${reason ? ' _' + reason + '_' : ''}!`;
+  let msg = `<@${namesSelection[getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
   let userList = namesSelection.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
     '');
@@ -285,7 +285,7 @@ app.view(manualInputViewId, async ({ ack, body, view, client, logger }) => {
   const max = inputArray.length;
 
   // Message to send user
-  let msg = `_*${inputArray[getRandomInt(0, max)]}*_ was chosen at random${reason ? ' _' + reason + '_' : ''}!`;
+  let msg = `_*${inputArray[getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
   let inputList = inputArray.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
     '');
