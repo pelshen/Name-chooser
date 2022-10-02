@@ -27,7 +27,7 @@ export const installationStore = {
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation lookup
-        return JSON.parse((await tableClient.getEntity('team', installQuery.enterpriseId)).entityData);
+        return JSON.parse((await tableClient.getEntity('team', installQuery.teamId)).entityData);
       }
       throw new Error('Failed fetching installation');
     },
@@ -40,7 +40,7 @@ export const installationStore = {
       }
       if (installQuery.teamId !== undefined) {
         // single team app installation deletion
-        return await tableClient.deleteEntity('team', installQuery.enterpriseId);
+        return await tableClient.deleteEntity('team', installQuery.teamId);
       }
       throw new Error('Failed to delete installation');
     },
