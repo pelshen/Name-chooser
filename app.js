@@ -89,6 +89,25 @@ const switchToUserButton = {
   }
 };
 
+const reasonInputBlockId = "reason_input_block";
+const reasonInputActionId = "reason_input_action";
+const reasonInput = {
+  "type": "input",
+  "block_id": reasonInputBlockId,
+  "element": {
+    "type": "plain_text_input",
+    "action_id": reasonInputActionId,
+    "placeholder": {
+      "type": "plain_text",
+      "text": "to run the next meeting"
+    }
+  },
+  "label": {
+    "type": "plain_text",
+    "text": "What are you choosing them for? (Optional)"
+  }
+};
+
 const conversationSelectBlockId = "conversation_select_block";
 const conversationSelectActionId = "conversation_select_action";
 const conversationSelect = {
@@ -128,6 +147,7 @@ const userInputModalView = {
   "blocks": [
     userSelect,
     switchToManualButton,
+    reasonInput,
     conversationSelect
   ],
   "submit": {
@@ -147,6 +167,7 @@ const manualInputModalView = {
   "blocks": [
     manualInput,
     switchToUserButton,
+    reasonInput,
     conversationSelect
   ],
   "submit": {
@@ -231,12 +252,13 @@ app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
 
   const namesSelection = view['state']['values'][userSelectBlockId][userSelectActionId].selected_users;
   const user = body['user']['id'];
+  const reason = view['state']['values'][reasonInputBlockId][reasonInputActionId]['value'];
   const conversation = view['state']['values'][conversationSelectBlockId][conversationSelectActionId];
 
   const max = namesSelection.length;
 
   // Message to send user
-  let msg = `<@${namesSelection[getRandomInt(0, max)]}> was chosen at random!`;
+  let msg = `<@${namesSelection[getRandomInt(0, max)]}> was chosen at random${reason ? ' _' + reason + '_' : ''}!`;
   let userList = namesSelection.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
     '');
@@ -257,12 +279,13 @@ app.view(manualInputViewId, async ({ ack, body, view, client, logger }) => {
   const rawTextInput = view['state']['values'][manualInputBlockId][manualInputActionId]['value'];
   const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
   const user = body['user']['id'];
+  const reason = view['state']['values'][reasonInputBlockId][reasonInputActionId]['value'];
   const conversation = view['state']['values'][conversationSelectBlockId][conversationSelectActionId];
 
   const max = inputArray.length;
 
   // Message to send user
-  let msg = `_*${inputArray[getRandomInt(0, max)]}*_ was chosen at random!`;
+  let msg = `_*${inputArray[getRandomInt(0, max)]}*_ was chosen at random${reason ? ' _' + reason + '_' : ''}!`;
   let inputList = inputArray.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
     '');
