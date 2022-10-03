@@ -227,18 +227,17 @@ app.command('/choosenames', async ({ command, ack, client, logger }) => {
         prefill.push(token.slice(token.indexOf('@') + 1, token.indexOf('|')));
       } else if (token.startsWith('<!subteam')) {
         try {
-          logger.info('usergroup string: ' + token);
-          logger.info('usergroup sliced string: ' + token.slice(token.indexOf('^') + 1, token.indexOf('|')));
           const result = await client.usergroups.users.list({ usergroup: token.slice(token.indexOf('^') + 1, token.indexOf('|')) });
           if (result.ok) {
+            logger.info('Returned users: ' + JSON.stringify(result.users));
             prefill.push(result.users);
           }
           else {
-            logger.error(result.error);
+            logger.error('Error in response getting users for group:' + result.error);
           }
         }
         catch (error) {
-          logger.error(error);
+          logger.error('Error occurred whilst getting user for group: ' + error);
         }
       } else {
         manual = true;
