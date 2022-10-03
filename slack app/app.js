@@ -225,8 +225,10 @@ app.command('/choosenames', async ({ command, ack, client, logger }) => {
     for (const token of tokens) {
       if (token.startsWith('<@U')) {
         prefill.push(token.slice(token.indexOf('@') + 1, token.indexOf('|')));
-      } else if (commandText.startsWith('<!subteam')) {
+      } else if (token.startsWith('<!subteam')) {
         try {
+          logger.info('usergroup string: ' + token);
+          logger.info('usergroup sliced string: ' + token.slice(token.indexOf('|') + 1, token.indexOf('>')));
           const result = await client.usergroups.users.list({ usergroup: token.slice(token.indexOf('|') + 1, token.indexOf('>')) });
           if (result.ok) {
             prefill.push(result.users);
