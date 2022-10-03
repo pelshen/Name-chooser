@@ -231,6 +231,7 @@ app.command('/choosenames', async ({ command, ack, client, logger }) => {
           if (result.ok) {
             logger.info('Returned users: ' + JSON.stringify(result.users));
             prefill.push(result.users);
+            logger.info('Prefill: ' + prefill);
           }
           else {
             logger.error('Error in response getting users for group:' + result.error);
