@@ -8,7 +8,7 @@ const app = new Bolt.App({
   clientId: process.env.SLACK_CLIENT_ID,
   clientSecret: process.env.SLACK_CLIENT_SECRET,
   stateSecret: '979ad718-cd06-4ab2-8c13-ad2bf04da98b',
-  scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read'],
+  scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read', 'channels:join'],
   installationStore: installationStore,
 });
 
@@ -267,6 +267,7 @@ app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
 
   // Message the user
   try {
+    await client.conversations.join({channel: conversation.selected_conversation});
     await client.chat.postMessage(chosenNamePost(conversation.selected_conversation, msg, contextMsg));
   }
   catch (error) {
@@ -294,6 +295,7 @@ app.view(manualInputViewId, async ({ ack, body, view, client, logger }) => {
 
   // Message the user
   try {
+    await client.conversations.join({channel: conversation.selected_conversation});
     await client.chat.postMessage(chosenNamePost(conversation.selected_conversation, msg, contextMsg));
   }
   catch (error) {
