@@ -105,7 +105,7 @@ const reasonInput = {
   },
   "label": {
     "type": "plain_text",
-    "text": "What are you choosing them for? (Optional)"
+    "text": "What are you choosing them for?"
   }
 };
 
