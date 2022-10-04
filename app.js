@@ -94,12 +94,13 @@ const reasonInputActionId = "reason_input_action";
 const reasonInput = {
   "type": "input",
   "block_id": reasonInputBlockId,
+  "optional": true,
   "element": {
     "type": "plain_text_input",
     "action_id": reasonInputActionId,
     "placeholder": {
       "type": "plain_text",
-      "text": "to run the next meeting"
+      "text": "eg. to run the next meeting"
     }
   },
   "label": {
