@@ -183,7 +183,6 @@ var triggerModal = async (triggerId, prefill, manual, client, logger) => {
     if (manual) {
       view.blocks[0].element.initial_value = prefill.join('\r\n');
     } else {
-      logger.info('Prefill: ' + JSON.stringify(prefill));
       view.blocks[0].element.initial_users = prefill;
     }
   }
@@ -230,8 +229,7 @@ app.command('/choosenames', async ({ command, ack, client, logger }) => {
         try {
           const result = await client.usergroups.users.list({ usergroup: token.slice(token.indexOf('^') + 1, token.indexOf('|')) });
           if (result.ok) {
-            logger.info('Returned users: ' + JSON.stringify(result.users));
-            prefill.push(result.users);
+            prefill.push(...result.users);
           }
           else {
             logger.error('Error in response getting users for group:' + result.error);
