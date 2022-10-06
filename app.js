@@ -258,16 +258,21 @@ app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
 
   const max = namesSelection.length;
 
-  // Message to send user
+  // Message to send
   let msg = `<@${namesSelection[getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
   let userList = namesSelection.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
     '');
   let contextMsg = `${userList} were included in the draw. Draw performed by <@${user}>.`;
 
-  // Message the user
+  // Message the channel specified, try to join first
   try {
     await client.conversations.join({channel: conversation.selected_conversation});
+  }
+  catch (error) {
+    logger.error(error);
+  }
+  try {
     await client.chat.postMessage(chosenNamePost(conversation.selected_conversation, msg, contextMsg));
   }
   catch (error) {
@@ -286,16 +291,21 @@ app.view(manualInputViewId, async ({ ack, body, view, client, logger }) => {
 
   const max = inputArray.length;
 
-  // Message to send user
+  // Message to send
   let msg = `_*${inputArray[getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
   let inputList = inputArray.reduce((prev, curr, index, arr) =>
     `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
     '');
   let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
 
-  // Message the user
+  // Message the channel specified, try to join first
   try {
     await client.conversations.join({channel: conversation.selected_conversation});
+  }
+  catch (error) {
+    logger.error(error);
+  }
+  try {
     await client.chat.postMessage(chosenNamePost(conversation.selected_conversation, msg, contextMsg));
   }
   catch (error) {
