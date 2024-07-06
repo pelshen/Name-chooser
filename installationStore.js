@@ -1,4 +1,6 @@
 import { TableClient } from "@azure/data-tables";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const tableClient = TableClient.fromConnectionString(process.env.AZURE_TABLES_ENDPOINT, "installations");
 await tableClient.createTable();

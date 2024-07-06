@@ -2,17 +2,17 @@
   "name": "name-chooser",
   "version": "0.1.0",
   "description": "Name chooser app for Slack",
-  "main": "index.js",
   "scripts": {
-    "test": "exit 0",
-    "start": "node -r dotenv/config app.js"
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
   },
   "type": "module",
-  "author": "",
-  "license": "ISC",
+  "author": "Patrick Elshen",
+  "license": "MIT",
   "dependencies": {
     "@azure/data-tables": "^13.2.0",
     "@slack/bolt": "^3.12.1",
+    "bolt-azure-functions-receiver": "^0.0.4",
     "dotenv": "^16.0.1"
   }
 }
