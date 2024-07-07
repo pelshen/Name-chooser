@@ -11,8 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@azure/data-tables": "^13.2.0",
-    "@slack/bolt": "^3.12.1",
+    "@azure/data-tables": "^13.2.2",
+    "@slack/bolt": "^3.19.0",
     "dotenv": "^16.0.1"
   }
 }
