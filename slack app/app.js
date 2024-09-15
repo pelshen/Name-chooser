@@ -1,15 +1,23 @@
 import Bolt from '@slack/bolt';
 
 import { installationStore } from './installationStore.js';
+import serverlessHttp from 'serverless-http';
 
-// Initializes your app with your bot token and signing secret
-const app = new Bolt.App({
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
+const { App, ExpressReceiver } = Bolt;
+
+const expressReceiver = new ExpressReceiver({
   clientId: process.env.SLACK_CLIENT_ID,
   clientSecret: process.env.SLACK_CLIENT_SECRET,
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
   stateSecret: '979ad718-cd06-4ab2-8c13-ad2bf04da98b',
   scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read', 'channels:join'],
   installationStore: installationStore,
+});
+
+// Initializes your app with your bot token and signing secret
+const app = new App({
+  receiver: expressReceiver,
+  processBeforeResponse: true,
 });
 
 const userSelectBlockId = "multi_user_select_block";
@@ -267,7 +275,7 @@ app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
 
   // Message the channel specified, try to join first
   try {
-    await client.conversations.join({channel: conversation.selected_conversation});
+    await client.conversations.join({ channel: conversation.selected_conversation });
   }
   catch (error) {
     logger.error(error);
@@ -300,7 +308,7 @@ app.view(manualInputViewId, async ({ ack, body, view, client, logger }) => {
 
   // Message the channel specified, try to join first
   try {
-    await client.conversations.join({channel: conversation.selected_conversation});
+    await client.conversations.join({ channel: conversation.selected_conversation });
   }
   catch (error) {
     logger.error(error);
@@ -364,12 +372,7 @@ app.action(switchToManualActionId, async ({ ack, body, client }) => {
   }
 });
 
-(async () => {
-  // Start your app
-  await app.start(process.env.PORT || 3000);
-
-  console.log('⚡️ Bolt app is running!');
-})();
+export const handler = serverlessHttp(expressReceiver.app);
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
