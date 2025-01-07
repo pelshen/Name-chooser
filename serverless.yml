@@ -1,15 +1,24 @@
 org: pelshen
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: name-chooser
 service: name-chooser
 
 provider:
   name: aws
   region: eu-west-2
-  runtime: nodejs20.x
+  runtime: nodejs22.x
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
     SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
     SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:*"
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/name-chooser*"
 
 functions:
   slack:
@@ -27,7 +36,7 @@ functions:
 
 resources:
   Resources:
-    usersTable:
+    installationsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: name-chooser_installation
