@@ -1,7 +1,7 @@
-import Bolt from '@slack/bolt';
+import Bolt, { LogLevel } from '@slack/bolt';
 
 import { installationStore } from './installationStore.js';
-import serverlessHttp from 'serverless-http';
+import serverlessExpress from '@codegenie/serverless-express';
 
 const { App, ExpressReceiver } = Bolt;
 
@@ -12,6 +12,7 @@ const expressReceiver = new ExpressReceiver({
   stateSecret: '979ad718-cd06-4ab2-8c13-ad2bf04da98b',
   scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read', 'channels:join'],
   installationStore: installationStore,
+  processBeforeResponse: true,
 });
 
 // Initializes your app with your bot token and signing secret
@@ -199,11 +200,10 @@ var triggerModal = async (triggerId, prefill, manual, client, logger) => {
   try {
     // Call views.open with the built-in client
     const result = await client.views.open({
-      // Pass a valid trigger_id within 3 seconds of receiving it
       trigger_id: triggerId,
-      // View payload
       view: view
     });
+    return result;
   }
   catch (error) {
     logger.error(error);
@@ -212,12 +212,12 @@ var triggerModal = async (triggerId, prefill, manual, client, logger) => {
 
 app.shortcut('user_choose_shortcut', async ({ shortcut, ack, client, logger }) => {
   await ack();
-  triggerModal(shortcut.trigger_id, null, false, client, logger);
+  return await triggerModal(shortcut.trigger_id, null, false, client, logger);
 });
 
 app.shortcut('manual_input_shortcut', async ({ shortcut, ack, client, logger }) => {
   await ack();
-  triggerModal(shortcut.trigger_id, null, true, client, logger);
+  return await triggerModal(shortcut.trigger_id, null, true, client, logger);
 });
 
 app.command('/choosenames', async ({ command, ack, client, logger }) => {
@@ -253,7 +253,8 @@ app.command('/choosenames', async ({ command, ack, client, logger }) => {
       }
     }
   }
-  triggerModal(command.trigger_id, prefill, manual, client, logger);
+  var result = await triggerModal(command.trigger_id, prefill, manual, client, logger);
+  return result;
 });
 
 app.view(userInputViewId, async ({ ack, body, view, client, logger }) => {
@@ -372,7 +373,7 @@ app.action(switchToManualActionId, async ({ ack, body, client }) => {
   }
 });
 
-export const handler = serverlessHttp(expressReceiver.app);
+export const handler = serverlessExpress({ app: expressReceiver.app });
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
