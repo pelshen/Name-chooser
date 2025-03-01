@@ -1,7 +1,7 @@
 org: pelshen
 # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
-app: name-chooser
-service: name-chooser
+app: name-draw
+service: name-draw
 
 provider:
   name: aws
@@ -18,7 +18,7 @@ provider:
         - Effect: "Allow"
           Action:
             - "dynamodb:*"
-          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/name-chooser*"
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*"
 
 functions:
   slack:
@@ -39,7 +39,7 @@ resources:
     installationsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: name-chooser_installation
+        TableName: name-draw_installation
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -66,5 +66,5 @@ custom:
     seed:
       domain:
         sources:
-          - table: name-chooser_installation
+          - table: name-draw_installation
             sources: [./installation-seed.json]

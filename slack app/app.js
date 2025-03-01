@@ -152,7 +152,7 @@ const userInputModalView = {
   "callback_id": userInputViewId,
   "title": {
     "type": "plain_text",
-    "text": "Name chooser"
+    "text": "Name draw"
   },
   "blocks": [
     userSelect,
@@ -172,7 +172,7 @@ const manualInputModalView = {
   "callback_id": manualInputViewId,
   "title": {
     "type": "plain_text",
-    "text": "Name chooser"
+    "text": "Name draw"
   },
   "blocks": [
     manualInput,
@@ -220,7 +220,7 @@ app.shortcut('manual_input_shortcut', async ({ shortcut, ack, client, logger }) 
   return await triggerModal(shortcut.trigger_id, null, true, client, logger);
 });
 
-app.command('/choosenames', async ({ command, ack, client, logger }) => {
+app.command('/drawnames', async ({ command, ack, client, logger }) => {
   await ack();
   const commandText = command.text.trim();
   let prefill = [];
