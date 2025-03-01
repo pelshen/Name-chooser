@@ -12,6 +12,7 @@ provider:
     SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
     SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
     SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
+    STAGE: ${sls:stage}
   iam:
     role:
       statements:
@@ -39,7 +40,7 @@ resources:
     installationsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: name-draw_installation
+        TableName: name-draw-${sls:stage}_installation
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
