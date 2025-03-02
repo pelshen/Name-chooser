@@ -5,8 +5,6 @@ name: Build and deploy Node.js app to Azure Web App - namechooser
 
 on:
   push:
-    branches:
-      - *
   workflow_dispatch:
 
 jobs:
