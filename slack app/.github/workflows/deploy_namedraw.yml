@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  STAGE: ${{ github.ref_name == 'main' ? 'prod' : 'dev' }}
+  STAGE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
 
 jobs:
   deploy:
