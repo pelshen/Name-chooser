@@ -6,7 +6,7 @@ on:
   push:
     branches:
       - main
-      - feature/aws-lambda-receiver
+      - feature/*
   workflow_dispatch:
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
   deploy-prod:
     runs-on: ubuntu-latest
     environment: production
-    if: always()
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v3
