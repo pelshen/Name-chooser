@@ -9,12 +9,10 @@ on:
       - feature/aws-lambda-receiver
   workflow_dispatch:
 
-env:
-  STAGE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
-
 jobs:
-  deploy:
+  deploy-dev:
     runs-on: ubuntu-latest
+    environment: development
 
     steps:
       - uses: actions/checkout@v3
@@ -26,6 +24,33 @@ jobs:
       - name: serverless deploy
         uses: serverless/github-action@v4
         with:
-          args: deploy -s $STAGE
+          args: deploy -s dev
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CLIENT_ID: ${{ vars.SLACK_CLIENT_ID }}
+          SLACK_CLIENT_SECRET: ${{ secrets.SLACK_CLIENT_SECRET }}
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: production
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js '22.x'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: serverless deploy
+        uses: serverless/github-action@v4
+        with:
+          args: deploy -s prod
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CLIENT_ID: ${{ vars.SLACK_CLIENT_ID }}
+          SLACK_CLIENT_SECRET: ${{ secrets.SLACK_CLIENT_SECRET }}
