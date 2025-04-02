@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#4A154B" cx="100" cy="100" r="100"></circle>
+        <path d="M140,70 L140,130 C140,135.523 135.523,140 130,140 L70,140 C64.477,140 60,135.523 60,130 L60,70 C60,64.477 64.477,60 70,60 L130,60 C135.523,60 140,64.477 140,70 Z" stroke="#FFFFFF" stroke-width="4"></path>
+        <text font-family="Arial-BoldMT, Arial" font-size="24" font-weight="bold" fill="#FFFFFF">
+            <tspan x="75" y="110">N D</tspan>
+        </text>
+        <path d="M90,80 C90,80 110,120 130,80" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+        <path d="M70,120 C70,120 90,80 110,120" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+    </g>
+</svg>
