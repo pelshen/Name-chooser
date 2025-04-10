@@ -1,9 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import HomePage from './pages/HomePage';
-import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import ErrorPage from './pages/ErrorPage';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import DynamicPage from './pages/DynamicPage';
 
 export const router = createBrowserRouter([
   {
@@ -16,8 +18,20 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
+        path: 'blog',
+        element: <Blog />,
+      },
+      {
+        path: 'blog/:slug',
+        element: <BlogPost />,
+      },
+      {
         path: 'privacy',
-        element: <PrivacyPage />,
+        element: <DynamicPage />,
+      },
+      {
+        path: 'pages/:slug',
+        element: <DynamicPage />,
       },
       {
         path: 'terms',
