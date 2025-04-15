@@ -1,0 +1,168 @@
+org: pelshen
+app: name-draw
+
+service: name-draw-marketing-site
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-2'}
+  environment:
+    STAGE: ${self:provider.stage}
+  apiGateway:
+    minimumCompressionSize: 1024
+    shouldStartNameWithService: true
+
+custom:
+  siteName: name-draw-marketing-${self:provider.stage}
+  client:
+    bucketName: ${self:custom.siteName}-website
+    distributionFolder: dist
+    indexDocument: index.html
+    errorDocument: index.html # For SPA routing
+  allowedOrigins:
+    dev: http://localhost:3000
+    prod: https://name-draw.com
+  s3Sync:
+    - bucketName: ${self:custom.client.bucketName}
+      localDir: ${self:custom.client.distributionFolder}
+      deleteRemoved: true
+      params:
+        - index.html:
+            CacheControl: 'no-cache'
+        - '*.js':
+            CacheControl: 'public, max-age=31536000'
+        - '*.css':
+            CacheControl: 'public, max-age=31536000'
+        - '*.png':
+            CacheControl: 'public, max-age=31536000'
+        - '*.jpg':
+            CacheControl: 'public, max-age=31536000'
+        - '*.svg':
+            CacheControl: 'public, max-age=31536000'
+
+plugins:
+  - serverless-s3-sync
+  - serverless-offline
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - '!public/**'
+    - '!.git/**'
+
+functions:
+  example:
+    handler: api/example.handler
+    events:
+      - http:
+          path: /api/example
+          method: get
+          cors:
+            origin: ${self:custom.allowedOrigins.${self:provider.stage}}
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: true
+
+resources:
+  Resources:
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.client.bucketName}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        WebsiteConfiguration:
+          IndexDocument: ${self:custom.client.indexDocument}
+          ErrorDocument: ${self:custom.client.errorDocument}
+          RoutingRules:
+            - ConditionErrorKey: 404
+              RedirectRule:
+                HostName: ${self:custom.client.bucketName}.s3-website.${self:provider.region}.amazonaws.com
+                ReplaceKeyWith: index.html
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerPreferred
+
+    WebsiteBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref WebsiteBucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: '*'
+              Action:
+                - s3:GetObject
+              Resource: arn:aws:s3:::${self:custom.client.bucketName}/*
+
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName: ${self:custom.client.bucketName}.s3-website-${self:provider.region}.amazonaws.com
+              Id: Website
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: http-only
+            - DomainName: !Sub '${ApiGatewayRestApi}.execute-api.${self:provider.region}.amazonaws.com'
+              Id: Api
+              OriginPath: /${self:provider.stage}
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only
+          Enabled: true
+          DefaultRootObject: ${self:custom.client.indexDocument}
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            TargetOriginId: Website
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          CacheBehaviors:
+            - PathPattern: /api/*
+              TargetOriginId: Api
+              AllowedMethods:
+                - DELETE
+                - GET
+                - HEAD
+                - OPTIONS
+                - PATCH
+                - POST
+                - PUT
+              ForwardedValues:
+                QueryString: true
+                Headers:
+                  - Authorization
+                Cookies:
+                  Forward: all
+              ViewerProtocolPolicy: https-only
+          CustomErrorResponses:
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /${self:custom.client.errorDocument}
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+
+  Outputs:
+    CloudFrontDistributionId:
+      Value: !Ref CloudFrontDistribution
+      Description: CloudFront Distribution ID
