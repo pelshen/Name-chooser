@@ -30,18 +30,19 @@ custom:
     - bucketName: ${self:custom.client.bucketName}
       localDir: ${self:custom.client.distributionFolder}
       deleteRemoved: true
+      acl: public-read
       params:
         - index.html:
             CacheControl: 'no-cache'
-        - '*.js':
+        - '**/*.js':
             CacheControl: 'public, max-age=31536000'
-        - '*.css':
+        - '**/*.css':
             CacheControl: 'public, max-age=31536000'
-        - '*.png':
+        - '**/*.png':
             CacheControl: 'public, max-age=31536000'
-        - '*.jpg':
+        - '**/*.jpg':
             CacheControl: 'public, max-age=31536000'
-        - '*.svg':
+        - '**/*.svg':
             CacheControl: 'public, max-age=31536000'
 
 plugins:
@@ -84,11 +85,16 @@ resources:
         WebsiteConfiguration:
           IndexDocument: ${self:custom.client.indexDocument}
           ErrorDocument: ${self:custom.client.errorDocument}
-          RoutingRules:
-            - ConditionErrorKey: 404
-              RedirectRule:
-                HostName: ${self:custom.client.bucketName}.s3-website.${self:provider.region}.amazonaws.com
-                ReplaceKeyWith: index.html
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - HEAD
+              AllowedOrigins:
+                - '*'
+              MaxAge: 3000
         OwnershipControls:
           Rules:
             - ObjectOwnership: BucketOwnerPreferred
@@ -111,7 +117,7 @@ resources:
       Properties:
         DistributionConfig:
           Origins:
-            - DomainName: ${self:custom.client.bucketName}.s3-website-${self:provider.region}.amazonaws.com
+            - DomainName: !GetAtt WebsiteBucket.DomainName
               Id: Website
               CustomOriginConfig:
                 HTTPPort: 80
@@ -156,6 +162,9 @@ resources:
                   Forward: all
               ViewerProtocolPolicy: https-only
           CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /${self:custom.client.errorDocument}
             - ErrorCode: 404
               ResponseCode: 200
               ResponsePagePath: /${self:custom.client.errorDocument}
@@ -166,3 +175,10 @@ resources:
     CloudFrontDistributionId:
       Value: !Ref CloudFrontDistribution
       Description: CloudFront Distribution ID
+    WebsiteURL:
+      Value: !GetAtt WebsiteBucket.WebsiteURL
+      Description: URL for the website hosted on S3
+    # If using CloudFront
+    CloudFrontURL:
+      Value: !GetAtt CloudFrontDistribution.DomainName
+      Description: CloudFront distribution domain name
