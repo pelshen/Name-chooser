@@ -6,19 +6,19 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src="/name-draw-logo.svg" alt="Name Draw" className="h-10 w-10" />
-          <span className="text-xl font-bold text-purple-900 dark:text-white">Name Draw</span>
+          <span className="text-xl font-bold text-primary dark:text-white">Name Draw</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/#features" className="text-gray-700 hover:text-purple-700 dark:text-gray-300 dark:hover:text-white transition-colors">
+          <Link to="/#features" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Features
           </Link>
-          <Link to="/#how-it-works" className="text-gray-700 hover:text-purple-700 dark:text-gray-300 dark:hover:text-white transition-colors">
-            How It Works
+          <Link to="/#how-it-works" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
+            How it works
           </Link>
-          <Link to="/#pricing" className="text-gray-700 hover:text-purple-700 dark:text-gray-300 dark:hover:text-white transition-colors">
+          <Link to="/#pricing" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Pricing
           </Link>
-          <Link to="/blog" className="text-gray-700 hover:text-purple-700 dark:text-gray-300 dark:hover:text-white transition-colors">
+          <Link to="/blog" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Blog
           </Link>
         </nav>
@@ -27,7 +27,7 @@ export default function Header() {
             href="https://slack.com/apps" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 transition-colors"
+            className="hidden md:inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-accent1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 transition-colors"
           >
             Add to Slack
           </a>

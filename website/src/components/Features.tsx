@@ -4,7 +4,7 @@ export default function Features() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Powerful Features for Your Team
+            Powerful features for your team
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Name Draw comes packed with everything you need to make random selections fair, fun, and efficient.
@@ -14,7 +14,7 @@ export default function Features() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div key={index} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
+              <div className="w-12 h-12 bg-accent1/20 dark:bg-accent2/30 rounded-lg flex items-center justify-center text-primary dark:text-accent1 mb-4">
                 {feature.icon}
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -33,7 +33,7 @@ export default function Features() {
 
 const features = [
   {
-    title: "Random Selection",
+    title: "Random selection",
     description: "Randomly select one or multiple team members from any channel, group, or custom list with complete fairness.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -42,7 +42,7 @@ const features = [
     ),
   },
   {
-    title: "Selection History",
+    title: "Selection history",
     description: "Keep track of who's been selected with built-in history, ensuring everyone gets a fair chance over time.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -51,7 +51,7 @@ const features = [
     ),
   },
   {
-    title: "Custom Groups",
+    title: "Custom groups",
     description: "Create and save custom groups of team members for different activities or projects.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -60,7 +60,7 @@ const features = [
     ),
   },
   {
-    title: "Exclusion Rules",
+    title: "Exclusion rules",
     description: "Exclude specific team members from selection when needed, perfect for when someone is out of office.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -69,7 +69,7 @@ const features = [
     ),
   },
   {
-    title: "Weighted Selection",
+    title: "Weighted selection",
     description: "Assign different weights to team members based on workload, expertise, or any other factor.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -78,7 +78,7 @@ const features = [
     ),
   },
   {
-    title: "Slack Commands",
+    title: "Slack commands",
     description: "Simple slash commands make it easy for anyone on your team to use Name Draw without any training.",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">

@@ -4,10 +4,10 @@ export default function Pricing() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Simple, Transparent Pricing
+            Simple, transparent pricing
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Choose the plan that works best for your team
+            Choose the plan that works best for your team:
           </p>
         </div>
         
@@ -15,15 +15,15 @@ export default function Pricing() {
           {plans.map((plan, index) => (
             <div 
               key={index} 
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border ${
+              className={`bg-white dark:bg-gray-700 p-8 rounded-lg shadow-md border-2 border-accent2/30 dark:border-accent2 flex flex-col items-center ${
                 plan.popular 
-                  ? 'border-purple-500 relative' 
+                  ? 'border-accent1 relative' 
                   : 'border-gray-200 dark:border-gray-700'
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
-                  MOST POPULAR
+                <div className="absolute top-0 right-0 bg-accent1 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                  Most popular
                 </div>
               )}
               <div className="p-6">
@@ -49,9 +49,9 @@ export default function Pricing() {
                   rel="noopener noreferrer"
                   className={`w-full inline-flex justify-center items-center rounded-md px-4 py-2 text-sm font-medium ${
                     plan.popular
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 transition-colors`}
+                      ? 'bg-primary text-white hover:bg-accent1'
+                      : 'bg-gray-100 text-accent2 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
+                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary transition-colors`}
                 >
                   {plan.buttonText}
                 </a>
@@ -67,10 +67,10 @@ export default function Pricing() {
           </p>
           <a
             href="mailto:sales@namedraw.app"
-            className="inline-flex items-center text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+            className="inline-flex items-center text-accent2 dark:text-accent1 hover:text-accent1 dark:hover:text-accent2"
           >
-            Contact Sales
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            Contact sales
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke="#373535">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </a>
