@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LoginButton } from "./LoginButton";
 
 export default function Header() {
   return (
@@ -21,6 +22,7 @@ export default function Header() {
           <Link to="/blog" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Blog
           </Link>
+          <LoginButton />
         </nav>
         <div className="flex items-center gap-4">
           <a 

@@ -3,18 +3,31 @@ app: name-draw
 
 service: name-draw-marketing-site
 
-frameworkVersion: '4'
-
 provider:
   name: aws
   runtime: nodejs22.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'eu-west-2'}
   environment:
+    SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
+    SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
+    SLACK_REDIRECT_URI: ${env:SLACK_REDIRECT_URI}
+    SESSION_SECRET: ${env:SESSION_SECRET}
+    SESSION_TABLE: name-draw-${sls:stage}_${env:SESSION_TABLE}
+    AWS_REGION: ${env:AWS_REGION}
     STAGE: ${self:provider.stage}
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*
 
 custom:
   siteName: name-draw-marketing-${self:provider.stage}
@@ -44,9 +57,22 @@ custom:
             CacheControl: 'public, max-age=31536000'
         - '**/*.svg':
             CacheControl: 'public, max-age=31536000'
+  serverless-offline:
+    httpPort: 4000
+    httpsProtocol: .
+    noPrependStageInUrl: true
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      migrate: true
+    migration:
+      dir: offline/migrations
 
 plugins:
   - serverless-s3-sync
+  - serverless-dynamodb
   - serverless-offline
 
 package:
@@ -70,6 +96,27 @@ functions:
               - Content-Type
               - Authorization
             allowCredentials: true
+  authSlack:
+    handler: api/auth/slack.handler
+    events:
+      - http:
+          path: /api/auth/slack
+          method: get
+          cors: true
+  authSlackCallback:
+    handler: api/auth/callback/slack.handler
+    events:
+      - http:
+          path: /api/auth/callback/slack
+          method: get
+          cors: true
+  account:
+    handler: api/account.handler
+    events:
+      - http:
+          path: /api/account
+          method: get
+          cors: true
 
 resources:
   Resources:
@@ -170,6 +217,18 @@ resources:
               ResponsePagePath: /${self:custom.client.errorDocument}
           ViewerCertificate:
             CloudFrontDefaultCertificate: true
+
+    SessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: name-draw-${sls:stage}_sessions
+        AttributeDefinitions:
+          - AttributeName: sessionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
 
   Outputs:
     CloudFrontDistributionId:

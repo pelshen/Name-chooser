@@ -21,7 +21,7 @@ export default function HomePage() {
           <Hero />
           <Features />
           <HowItWorks />
-          <Testimonials />
+          {/* <Testimonials /> We have none yet! */}
           <Pricing />
           <CTA />
         </main>

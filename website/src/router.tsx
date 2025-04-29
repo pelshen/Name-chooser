@@ -6,6 +6,7 @@ import ErrorPage from './pages/ErrorPage';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import DynamicPage from './pages/DynamicPage';
+import { Account } from "./pages/Account";
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: 'terms',
         element: <TermsPage />,
+      },
+      {
+        path: 'account',
+        element: <Account />,
       },
     ],
   },

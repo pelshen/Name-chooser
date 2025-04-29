@@ -4,7 +4,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "api": "serverless offline start",
+    "web": "vite",
+    "dev": "concurrently \"npm run api\" \"npm run web\"",
     "build": "tsc && vite build",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "preview": "vite preview",
@@ -13,8 +15,13 @@
     "deploy:prod": "npm run build && serverless deploy --stage prod"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.798.0",
+    "@aws-sdk/lib-dynamodb": "^3.798.0",
     "@portabletext/react": "^3.2.1",
     "@sanity/client": "^6.28.4",
+    "arctic": "^3.6.0",
+    "concurrently": "^7.5.0",
+    "cookie": "^1.0.2",
     "groq": "^3.83.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -38,11 +45,13 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.38",
     "serverless": "^4.0.0",
+    "serverless-dynamodb": "^0.2.56",
     "serverless-offline": "^14.0.0",
     "serverless-s3-sync": "^3.2.0",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.1.6",
     "vite": "^6.0.0",
+    "vite-plugin-mkcert": "^1.17.8",
     "vite-tsconfig-paths": "^4.2.1"
   },
   "engines": {
