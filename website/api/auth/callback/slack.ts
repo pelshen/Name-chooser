@@ -22,17 +22,34 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   }
 
   const tokens = await slack.validateAuthorizationCode(code);
+  console.log("Tokens: " + JSON.stringify(tokens));
 
-  // Fetch Slack user info
-  const userResp = await fetch("https://slack.com/api/users.identity", {
-    headers: { Authorization: `Bearer ${tokens.accessToken()}` }
-  });
-  const userData = await userResp.json();
+  // Decode id_token (JWT) to extract user info
+  function decodeJwt(token: string) {
+    const payload = token.split('.')[1];
+    const decoded = Buffer.from(payload, 'base64').toString('utf-8');
+    return JSON.parse(decoded);
+  }
+
+  const idToken = tokens.idToken();
+  if (!idToken) {
+    return { statusCode: 400, body: "Missing id_token from Slack response" };
+  }
+  const decoded = decodeJwt(idToken);
+
+  // Extract user fields
+  const user = {
+    name: decoded.name,
+    team_id: decoded["https://slack.com/team_id"],
+    user_id: decoded["https://slack.com/user_id"],
+    email: decoded.email,
+    picture: decoded.picture || decoded.image || decoded.avatar || undefined,
+  };
 
   // Create session
   const sessionId = crypto.randomBytes(32).toString("hex");
   const sessionSig = signSession(sessionId);
-  await saveSession(sessionId, { user: userData.user });
+  await saveSession(sessionId, { user });
 
   // Set session cookie (signed)
   const cookie = serializeCookie("session", `${sessionId}.${sessionSig}`, {

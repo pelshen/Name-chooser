@@ -30,10 +30,10 @@ export function Account() {
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 pt-24 flex flex-col justify-between">
         <div className="flex-1">
           <div className="container mx-auto px-4 flex justify-center items-start">
-            <div className="bg-gray-800 rounded-lg shadow-md border border-gray-700 max-w-md w-full p-8 mt-12 flex flex-col items-center">
-              {user.image_192 || user.image_72 ? (
+            <div className="bg-gray-800 rounded-lg shadow-md border border-gray-700 max-w-md w-full p-8 mt-12 mb-16 flex flex-col items-center">
+              {user.picture ? (
                 <img
-                  src={user.image_192 || user.image_72}
+                  src={user.picture}
                   alt="User avatar"
                   className="w-24 h-24 rounded-full border-4 border-purple-500 shadow-lg mb-6"
                 />
@@ -49,8 +49,12 @@ export function Account() {
                   <span className="block text-lg text-white font-semibold">{user.email}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-400 text-sm">Slack ID</span>
-                  <span className="block text-lg text-white font-semibold">{user.id}</span>
+                  <span className="block text-gray-400 text-sm">Slack User ID</span>
+                  <span className="block text-lg text-white font-semibold">{user.user_id}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-400 text-sm">Slack Team ID</span>
+                  <span className="block text-lg text-white font-semibold">{user.team_id}</span>
                 </div>
               </div>
             </div>
