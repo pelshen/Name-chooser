@@ -110,6 +110,13 @@ functions:
           path: /api/auth/callback/slack
           method: get
           cors: true
+  authLogout:
+    handler: api/auth/logout.handler
+    events:
+      - http:
+          path: /api/auth/logout
+          method: post
+          cors: true
   account:
     handler: api/account.handler
     events:

@@ -1,8 +1,52 @@
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
 export function LoginButton() {
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch('/api/account', { credentials: 'include' })
+      .then(res => {
+        if (res.status === 200) setLoggedIn(true);
+        else setLoggedIn(false);
+      })
+      .catch(() => setLoggedIn(false));
+  }, []);
+
+  const handleLogin = () => {
+    window.location.href = "/api/auth/slack";
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    toast.success('You have been logged out');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 500);
+  };
+
+  if (loggedIn === null) return null; // Optionally show spinner
+
+  if (loggedIn) {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="bg-primary text-white px-5 py-2 min-h-[44px] font-semibold rounded shadow-sm hover:bg-accent1 transition"
+        aria-label="Logout"
+      >
+        <span className="text-base font-bold">
+          Logout
+        </span>
+      </button>
+    );
+  }
+
+  // Not logged in
   return (
     <button
       type="button"
-      onClick={() => { window.location.href = "/api/auth/slack"; }}
+      onClick={handleLogin}
       className="flex items-center gap-3 bg-white border border-gray-300 shadow-sm rounded px-5 py-2 min-h-[44px] font-semibold text-gray-900 hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-[#611f69] transition"
       aria-label="Sign in with Slack"
     >

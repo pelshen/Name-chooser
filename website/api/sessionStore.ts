@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 const isOffline = process.env.IS_OFFLINE === "true";
 const options = {
@@ -28,4 +28,11 @@ export async function getSession(sessionId: string) {
     Key: { sessionId }
   }));
   return res.Item;
+}
+
+export async function deleteSession(sessionId: string) {
+  await client.send(new DeleteCommand({
+    TableName: tableName,
+    Key: { sessionId },
+  }));
 }
