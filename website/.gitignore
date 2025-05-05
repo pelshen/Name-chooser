@@ -7,3 +7,5 @@ dist
 .esbuild
 .serverless
 .dynamodb
+cert.pem
+key.pem
