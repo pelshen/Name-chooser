@@ -51,9 +51,7 @@ resources:
             KeyType: HASH
           - AttributeName: type
             KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
 plugins:
   - serverless-dynamodb
   - serverless-offline
