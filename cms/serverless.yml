@@ -1,0 +1,21 @@
+org: pelshen
+app: name-draw
+
+service: cms
+
+provider:
+  name: aws
+  region: eu-west-2 # or your preferred AWS region
+
+plugins:
+  - serverless-finch
+
+custom:
+  client:
+    bucketName: name-draw-sanity-studio
+    distributionFolder: dist
+    indexDocument: index.html
+    errorDocument: index.html
+    # Uncomment below if using custom domain and ACM cert
+    # domain: studio.yourdomain.com
+    # certificateArn: arn:aws:acm:...
