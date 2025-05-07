@@ -1,6 +1,6 @@
 # Root .gitignore for monorepo
 # Node dependencies
-/node_modules/
+node_modules/
 
 # npm/yarn/pnpm logs
 npm-debug.log*
