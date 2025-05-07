@@ -1,0 +1,250 @@
+org: pelshen
+app: name-draw
+
+service: name-draw-marketing-site
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-2'}
+  environment:
+    SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
+    SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
+    SLACK_REDIRECT_URI: ${env:SLACK_REDIRECT_URI}
+    SESSION_SECRET: ${env:SESSION_SECRET}
+    SESSION_TABLE: name-draw-${sls:stage}_${env:SESSION_TABLE}
+    AWS_REGION: ${env:AWS_REGION}
+    STAGE: ${self:provider.stage}
+  apiGateway:
+    minimumCompressionSize: 1024
+    shouldStartNameWithService: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*
+
+custom:
+  siteName: name-draw-marketing-${self:provider.stage}
+  client:
+    bucketName: ${self:custom.siteName}-website
+    distributionFolder: dist
+    indexDocument: index.html
+    errorDocument: index.html # For SPA routing
+  allowedOrigins:
+    dev: http://localhost:3000
+    prod: https://name-draw.com
+  s3Sync:
+    - bucketName: ${self:custom.client.bucketName}
+      localDir: ${self:custom.client.distributionFolder}
+      deleteRemoved: true
+      acl: public-read
+      params:
+        - index.html:
+            CacheControl: 'no-cache'
+        - '**/*.js':
+            CacheControl: 'public, max-age=31536000'
+        - '**/*.css':
+            CacheControl: 'public, max-age=31536000'
+        - '**/*.png':
+            CacheControl: 'public, max-age=31536000'
+        - '**/*.jpg':
+            CacheControl: 'public, max-age=31536000'
+        - '**/*.svg':
+            CacheControl: 'public, max-age=31536000'
+  serverless-offline:
+    httpPort: 4000
+    httpsProtocol: .
+    noPrependStageInUrl: true
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      migrate: true
+    migration:
+      dir: offline/migrations
+
+plugins:
+  - serverless-s3-sync
+  - serverless-dynamodb
+  - serverless-offline
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - '!public/**'
+    - '!.git/**'
+
+functions:
+  example:
+    handler: api/example.handler
+    events:
+      - http:
+          path: /api/example
+          method: get
+          cors:
+            origin: ${self:custom.allowedOrigins.${self:provider.stage}}
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: true
+  authSlack:
+    handler: api/auth/slack.handler
+    events:
+      - http:
+          path: /api/auth/slack
+          method: get
+          cors: true
+  authSlackCallback:
+    handler: api/auth/callback/slack.handler
+    events:
+      - http:
+          path: /api/auth/callback/slack
+          method: get
+          cors: true
+  authLogout:
+    handler: api/auth/logout.handler
+    events:
+      - http:
+          path: /api/auth/logout
+          method: post
+          cors: true
+  account:
+    handler: api/account.handler
+    events:
+      - http:
+          path: /api/account
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.client.bucketName}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        WebsiteConfiguration:
+          IndexDocument: ${self:custom.client.indexDocument}
+          ErrorDocument: ${self:custom.client.errorDocument}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - HEAD
+              AllowedOrigins:
+                - '*'
+              MaxAge: 3000
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerPreferred
+
+    WebsiteBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref WebsiteBucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: '*'
+              Action:
+                - s3:GetObject
+              Resource: arn:aws:s3:::${self:custom.client.bucketName}/*
+
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName: !GetAtt WebsiteBucket.DomainName
+              Id: Website
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: http-only
+            - DomainName: !Sub '${ApiGatewayRestApi}.execute-api.${self:provider.region}.amazonaws.com'
+              Id: Api
+              OriginPath: /${self:provider.stage}
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only
+          Enabled: true
+          DefaultRootObject: ${self:custom.client.indexDocument}
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            TargetOriginId: Website
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          CacheBehaviors:
+            - PathPattern: /api/*
+              TargetOriginId: Api
+              AllowedMethods:
+                - DELETE
+                - GET
+                - HEAD
+                - OPTIONS
+                - PATCH
+                - POST
+                - PUT
+              ForwardedValues:
+                QueryString: true
+                Headers:
+                  - Authorization
+                Cookies:
+                  Forward: all
+              ViewerProtocolPolicy: https-only
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /${self:custom.client.errorDocument}
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /${self:custom.client.errorDocument}
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+
+    SessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: name-draw-${sls:stage}_sessions
+        AttributeDefinitions:
+          - AttributeName: sessionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+  Outputs:
+    CloudFrontDistributionId:
+      Value: !Ref CloudFrontDistribution
+      Description: CloudFront Distribution ID
+    WebsiteURL:
+      Value: !GetAtt WebsiteBucket.WebsiteURL
+      Description: URL for the website hosted on S3
+    # If using CloudFront
+    CloudFrontURL:
+      Value: !GetAtt CloudFrontDistribution.DomainName
+      Description: CloudFront distribution domain name

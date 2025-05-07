@@ -1,0 +1,11 @@
+node_modules
+
+/.cache
+/build
+.env
+dist
+.esbuild
+.serverless
+.dynamodb
+cert.pem
+key.pem
