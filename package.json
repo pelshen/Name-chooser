@@ -1,24 +1,8 @@
 {
-  "name": "name-draw",
-  "version": "0.1.0",
-  "description": "Name draw app for Slack",
-  "main": "index.js",
-  "scripts": {
-    "test": "exit 0",
-    "start": "node --env-file .env app.js",
-    "debug": "SET SLS_DEBUG=* && node --env-file .env --inspect node_modules\\serverless\\bin\\serverless offline"
-  },
-  "type": "module",
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.623.0",
-    "@slack/bolt": "^3.19.0",
-    "dotenv": "^16.0.1",
-    "@codegenie/serverless-express": "^4.16.0"
-  },
-  "devDependencies": {
-    "serverless-dynamodb": "^0.2.54",
-    "serverless-offline": "^14.4.0"
-  }
+  "private": true,
+  "workspaces": [
+    "website",
+    "cms",
+    "slack app"
+  ]
 }

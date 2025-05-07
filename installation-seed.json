@@ -1,7 +1,0 @@
-[
-    {
-        "type": "team",
-        "id": "<id>",
-        "data": "{\"team\":{\"id\":\"<id>\",\"name\":\"<name>\"},\"user\":{\"id\":\"<user-id>\"},\"tokenType\":\"bot\",\"isEnterpriseInstall\":false,\"appId\":\"A03T4PFLW9W\",\"authVersion\":\"v2\",\"bot\":{\"scopes\":[\"chat:write\",\"commands\",\"channels:history\",\"groups:history\",\"im:history\",\"mpim:history\",\"usergroups:read\"],\"token\":\"<slack-token>\",\"userId\":\"<user-id>\",\"id\":\"<bot-id>\"}}"
-    }
-]
