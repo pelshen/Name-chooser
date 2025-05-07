@@ -1,11 +1,6 @@
-node_modules
-
+# Project-specific ignores for Website
 /.cache
-/build
-.env
-dist
 .esbuild
-.serverless
 .dynamodb
 cert.pem
 key.pem
