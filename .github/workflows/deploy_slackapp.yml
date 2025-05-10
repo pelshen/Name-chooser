@@ -9,6 +9,7 @@ on:
       - feature/*
     paths:
       - 'slack app/**'
+      - '.github/workflows/deploy_slackapp.yml'
   workflow_dispatch:
 
 jobs:
