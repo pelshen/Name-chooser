@@ -10,6 +10,7 @@ const slack = new Slack(
 );
 
 import { saveSession } from "../../sessionStore";
+import { AccountUser } from "@/types";
 
 function signSession(sessionId: string): string {
   return crypto.createHmac("sha256", process.env.SESSION_SECRET!).update(sessionId).digest("hex");
@@ -38,7 +39,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
   const decoded = decodeJwt(idToken);
 
   // Extract user fields
-  const user = {
+  const user: AccountUser = {
     name: decoded.name,
     team_id: decoded["https://slack.com/team_id"],
     user_id: decoded["https://slack.com/user_id"],

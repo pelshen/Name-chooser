@@ -6,4 +6,5 @@ export type AccountUser = {
   email: string;
   user_id: string;
   team_id: string;
+  plan?: 'FREE' | 'PRO';
 };

@@ -2,6 +2,7 @@ import { parse as parseCookie } from "cookie";
 import crypto from "crypto";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { getSession } from "./sessionStore";
+import { getAccountPlan } from "./accountStore";
 
 function signSession(sessionId: string): string {
   return crypto.createHmac("sha256", process.env.SESSION_SECRET!).update(sessionId).digest("hex");
@@ -27,9 +28,13 @@ export const handler = async (
     return { statusCode: 401, body: "Session not found" };
   }
 
+  // Look up the plan for this user's team_id
+  const plan = await getAccountPlan(session.user.team_id);
+  const userWithPlan = { ...session.user, plan };
+
   return {
     statusCode: 200,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: session.user })
+    body: JSON.stringify({ user: userWithPlan })
   };
 };

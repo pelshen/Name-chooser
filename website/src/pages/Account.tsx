@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import { LoginButton } from "@/components/LoginButton";
 import type { AccountUser } from "@/types";
+import { InfoIcon } from "@/components/InfoIcon";
 
 function AccountCard({ children }: { children: React.ReactNode }) {
   return (
@@ -81,6 +82,25 @@ export function Account() {
           <div>
             <span className="block text-gray-400 text-sm">Slack Team ID</span>
             <span className="block text-lg text-white font-semibold">{user.team_id}</span>
+          </div>
+          <div>
+            <span className="block text-gray-400 text-sm">Plan</span>
+            <span className="block text-lg text-white font-semibold flex items-center gap-2">
+              {user.plan}
+              <InfoIcon
+                message={user.plan === 'FREE'
+                  ? 'Limited to 3 uses per user per month'
+                  : 'Unlimited uses for all users in workspace'}
+              />
+              {user.plan === 'FREE' && (
+                <button
+                  className="ml-2 px-3 py-1 text-xs font-semibold rounded bg-purple-600 hover:bg-purple-700 text-white shadow"
+                  onClick={() => alert('Upgrade flow coming soon!')}
+                >
+                  Upgrade
+                </button>
+              )}
+            </span>
           </div>
         </div>
       </>
