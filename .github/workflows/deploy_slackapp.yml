@@ -1,24 +1,12 @@
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Deploy slack app using serverless
 
 on:
-  push:
-    branches:
-      - main
-      - feature/*
-    paths:
-      - 'slack app/**'
-      - '.github/workflows/deploy_slackapp.yml'
   workflow_dispatch:
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
     environment: development
-    defaults:
-      run:
-        working-directory: './slack app'
 
     steps:
       - uses: actions/checkout@v3
@@ -26,11 +14,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: pwd && ls -a && npm ci
       - name: serverless deploy
         uses: serverless/github-action@v4
         with:
           args: deploy -s dev
+        working-directory: './slack app'
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
@@ -42,9 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     if: github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: './slack app'
 
     steps:
       - uses: actions/checkout@v3
@@ -52,8 +37,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci
       - name: serverless deploy
         uses: serverless/github-action@v4
         with:
           args: deploy -s prod
+        working-directory: './slack app'
