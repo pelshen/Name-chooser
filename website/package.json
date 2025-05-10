@@ -32,8 +32,8 @@
   "devDependencies": {
     "@tailwindcss/line-clamp": "^0.4.4",
     "@types/aws-lambda": "^8.10.136",
-    "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "@vitejs/plugin-react": "^4.2.1",

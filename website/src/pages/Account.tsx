@@ -18,7 +18,6 @@ function AccountCard({ children }: { children: React.ReactNode }) {
 export function Account() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/account")
