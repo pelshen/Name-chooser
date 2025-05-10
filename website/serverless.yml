@@ -36,6 +36,7 @@ provider:
           Action:
             - dynamodb:GetItem
             - dynamodb:PutItem
+            - dynamodb:DeleteItem
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*
 
