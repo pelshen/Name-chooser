@@ -4,7 +4,7 @@ import crypto from "crypto";
 const slack = new Slack(
   process.env.SLACK_CLIENT_ID!,
   process.env.SLACK_CLIENT_SECRET!,
-  process.env.SLACK_REDIRECT_URI!
+  process.env.SLACK_REDIRECT_HOST! + 'api/auth/callback/slack'
 );
 
 export const handler = async () => {

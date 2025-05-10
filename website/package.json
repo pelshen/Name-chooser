@@ -11,7 +11,7 @@
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "preview": "vite preview",
     "typecheck": "tsc",
-    "deploy": "npm run build && serverless deploy",
+    "deploy": "npm run build && serverless deploy --stage dev",
     "deploy:prod": "npm run build && serverless deploy --stage prod"
   },
   "dependencies": {
@@ -46,6 +46,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.38",
     "serverless": "^4.0.0",
+    "serverless-cloudfront-invalidate": "^1.12.2",
     "serverless-dynamodb": "^0.2.56",
     "serverless-offline": "^14.0.0",
     "serverless-s3-sync": "^3.2.0",

@@ -4,3 +4,4 @@
 .dynamodb
 cert.pem
 key.pem
+dist/
