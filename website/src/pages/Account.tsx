@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import { LoginButton } from "@/components/LoginButton";
+import type { AccountUser } from "@/types";
 
 function AccountCard({ children }: { children: React.ReactNode }) {
   return (
@@ -16,7 +17,7 @@ function AccountCard({ children }: { children: React.ReactNode }) {
 }
 
 export function Account() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AccountUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
