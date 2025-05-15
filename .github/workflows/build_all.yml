@@ -1,4 +1,4 @@
-name: Build Node.js slack app
+name: Build all
 
 on:
   push:
@@ -7,9 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './slack app'
 
     steps:
       - uses: actions/checkout@v4
