@@ -16,9 +16,9 @@ if (process.env.IS_OFFLINE) {
 
 const dynamoClient = new DynamoDBClient(options);
 
-const buildItem = (type, id, data) => ({ id: { S: id }, type: { S: type }, data: { S: data } });
+const buildItem = (type, id, data) => ({ id: { S: id }, type: { S: type }, installationData: { S: data } });
 
-const tableName = `name-draw-${process.env.STAGE}_installation`;
+const tableName = process.env.ACCOUNT_TABLE;
 
 export const installationStore = {
   storeInstallation: async (installation) => {

@@ -1,19 +1,9 @@
 import type { AccountUser } from "../src/types";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { dynamoClientOptions } from "./dynamoClientOptions";
 
-const isOffline = process.env.IS_OFFLINE === "true";
-const options = {
-  region: process.env.AWS_REGION || "eu-west-2",
-  ...(isOffline && {
-    endpoint: "http://localhost:8000",
-    credentials: {
-      accessKeyId: "fake",
-      secretAccessKey: "fake",
-    },
-  }),
-}
-const client = new DynamoDBClient(options);
+const client = new DynamoDBClient(dynamoClientOptions);
 const tableName = process.env.SESSION_TABLE || "sessions";
 
 export async function saveSession(sessionId: string, data: { user: AccountUser }) {

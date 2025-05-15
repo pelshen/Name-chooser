@@ -29,7 +29,12 @@ export const handler = async (
   }
 
   // Look up the plan for this user's team_id
-  const plan = await getAccountPlan(session.user.team_id);
+  let plan: 'FREE' | 'PRO' = 'FREE';
+  try {
+    plan = await getAccountPlan(session.user.team_id);
+  } catch (err) {
+    plan = 'FREE';
+  }
   const userWithPlan = { ...session.user, plan };
 
   return {

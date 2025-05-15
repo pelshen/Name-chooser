@@ -6,13 +6,15 @@ service: name-draw
 provider:
   name: aws
   region: eu-west-2
+  stage: ${opt:stage, 'local'}
   runtime: nodejs22.x
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
     SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
     SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
-    STAGE: ${sls:stage}
+    STAGE: ${self:provider.stage}
+    ACCOUNT_TABLE: name-draw-${sls:stage}_${env:ACCOUNT_TABLE}
   iam:
     role:
       statements:
@@ -40,7 +42,7 @@ resources:
     installationsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: name-draw-${sls:stage}_installation
+        TableName: ${self:provider.environment.ACCOUNT_TABLE}
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
@@ -61,9 +63,12 @@ custom:
     start:
       migrate: true
       seed: true
+      inMemory: false
+      dbPath: ..
+      optimizeDbBeforeStartup: false
 
     seed:
-      domain:
+      shared:
         sources:
-          - table: name-draw_installation
-            sources: [./installation-seed.json]
+          - table: ${self:provider.environment.ACCOUNT_TABLE}
+            sources: [../account-seed.json]

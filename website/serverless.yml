@@ -25,6 +25,7 @@ provider:
     SLACK_REDIRECT_HOST: ${param:host}
     SESSION_SECRET: ${env:SESSION_SECRET}
     SESSION_TABLE: name-draw-${sls:stage}_${env:SESSION_TABLE}
+    ACCOUNT_TABLE: name-draw-${sls:stage}_${env:ACCOUNT_TABLE}
     STAGE: ${self:provider.stage}
   apiGateway:
     minimumCompressionSize: 1024
@@ -74,14 +75,14 @@ custom:
     httpPort: 4000
     httpsProtocol: .
     noPrependStageInUrl: true
-  dynamodb:
+  serverless-dynamodb:
     stages:
       - local
     start:
-      inMemory: true
+      inMemory: false
       migrate: true
-    migration:
-      dir: offline/migrations
+      dbPath: ..
+      optimizeDbBeforeStartup: false
 
 plugins:
   - serverless-s3-sync
