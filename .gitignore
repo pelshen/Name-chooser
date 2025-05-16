@@ -48,10 +48,5 @@ Thumbs.db
 .pnp
 .pnp.js
 
-# Ignore root lock files (workspaces use individual locks)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
 # Ignore seed files
 *-seed.json
