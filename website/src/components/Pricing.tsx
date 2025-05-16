@@ -1,4 +1,71 @@
+import { useState } from "react";
+
+// Environment variables required (add to your .env file):
+// VITE_PADDLE_CLIENT_TOKEN - Paddle client-side token
+// VITE_PADDLE_PRO_MONTHLY_PRICE_ID - Paddle Pro plan monthly price ID
+// VITE_PADDLE_PRO_ANNUAL_PRICE_ID - Paddle Pro plan annual price ID
+const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
+const PADDLE_PRO_MONTHLY_PRICE_ID = import.meta.env.VITE_PADDLE_PRO_MONTHLY_PRICE_ID;
+const PADDLE_PRO_ANNUAL_PRICE_ID = import.meta.env.VITE_PADDLE_PRO_ANNUAL_PRICE_ID;
+
+type Plan = {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  buttonText: string;
+  buttonLink?: string;
+  popular: boolean;
+  priceId?: string;
+};
+
 export default function Pricing() {
+  // Toggle state: true = annual, false = monthly
+  const [isAnnual, setIsAnnual] = useState(false);
+
+  // Pricing data based on toggle
+  const proPlan: Plan = {
+    name: "Pro",
+    price: isAnnual ? "50" : "5", // Example: $5/mo or $50/yr (update as needed)
+    period: isAnnual ? "year" : "month",
+    description: isAnnual
+      ? "Best value for teams ready to commit. Save 17%!"
+      : "Ideal for growing teams with regular needs",
+    features: [
+      "Up to 50 team members",
+      "Advanced selection options",
+      "Unlimited selections",
+      "30-day history",
+      "Custom groups",
+      "Exclusion rules",
+    ],
+    buttonText: isAnnual ? "Get Pro Annually" : "Get Pro Monthly",
+    buttonLink: undefined,
+    popular: true,
+    priceId: isAnnual ? PADDLE_PRO_ANNUAL_PRICE_ID : PADDLE_PRO_MONTHLY_PRICE_ID,
+  };
+
+  const plans: Plan[] = [
+    {
+      name: "Free",
+      price: "0",
+      period: "forever",
+      description: "Perfect for small teams just getting started",
+      features: [
+        "Up to 10 team members",
+        "Basic random selection",
+        "5 selections per day",
+        "7-day history",
+      ],
+      buttonText: "Get Started Free",
+      buttonLink: "https://slack.com/apps",
+      popular: false,
+      priceId: undefined,
+    },
+    proPlan
+  ];
+
   return (
     <section id="pricing" className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4 md:px-6">
@@ -10,9 +77,26 @@ export default function Pricing() {
             Choose the plan that works best for your team:
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
+
+        {/* Toggle slider for monthly/annual */}
+        <div className="flex justify-center items-center mb-12">
+          <span className={`mr-3 font-medium ${!isAnnual ? 'text-accent1' : 'text-gray-500 dark:text-gray-400'}`}>Monthly</span>
+          <button
+            type="button"
+            className="relative inline-flex h-6 w-12 border-2 border-accent2 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent1 mx-2"
+            onClick={() => setIsAnnual(!isAnnual)}
+            aria-pressed={isAnnual}
+            aria-label="Toggle annual/monthly pricing"
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-accent1 shadow transform transition-transform duration-200 ${isAnnual ? 'translate-x-6' : 'translate-x-1'}`}
+            />
+          </button>
+          <span className={`ml-3 font-medium ${isAnnual ? 'text-accent1' : 'text-gray-500 dark:text-gray-400'}`}>Annual</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto justify-center">
+          {plans.map((plan: Plan, index: number) => (
             <div 
               key={index} 
               className={`bg-white dark:bg-gray-700 p-8 rounded-lg shadow-md border-2 border-accent2/30 dark:border-accent2 flex flex-col items-center ${
@@ -34,7 +118,7 @@ export default function Pricing() {
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, i) => (
+                  {plan.features.map((feature: string, i: number) => (
                     <li key={i} className="flex items-start">
                       <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -43,18 +127,48 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={plan.buttonLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-full inline-flex justify-center items-center rounded-md px-4 py-2 text-sm font-medium ${
-                    plan.popular
-                      ? 'bg-primary text-white hover:bg-accent1'
-                      : 'bg-gray-100 text-accent2 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary transition-colors`}
-                >
-                  {plan.buttonText}
-                </a>
+                {plan.priceId ? (
+  <button
+    type="button"
+    className={`w-full inline-flex justify-center items-center rounded-md px-4 py-2 text-sm font-medium ${
+      plan.popular
+        ? 'bg-primary text-white hover:bg-accent1'
+        : 'bg-gray-100 text-accent2 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
+    } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary transition-colors`}
+    onClick={async () => {
+      try {
+        const { initializePaddle } = await import('@paddle/paddle-js');
+        const paddle = await initializePaddle({
+          token: PADDLE_CLIENT_TOKEN,
+        });
+        if (!plan.priceId) throw new Error('No priceId set for this plan');
+        paddle?.Checkout.open({
+          settings: { displayMode: 'overlay', theme: 'light' },
+          items: [{ priceId: plan.priceId, quantity: 1 }],
+        });
+      } catch (err) {
+        alert('Paddle failed to load or is misconfigured. Please check your setup.');
+      }
+    }}
+  >
+    {plan.buttonText}
+  </button>
+) : (
+  <a
+    href={plan.buttonLink}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`w-full inline-flex justify-center items-center rounded-md px-4 py-2 text-sm font-medium ${
+      plan.name === 'Free'
+        ? 'bg-primary text-white hover:bg-accent1 shadow-lg'
+        : plan.popular
+          ? 'bg-primary text-white hover:bg-accent1'
+          : 'bg-gray-100 text-accent2 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
+    } focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary transition-colors`}
+  >
+    {plan.buttonText}
+  </a>
+)}
               </div>
             </div>
           ))}
@@ -79,55 +193,3 @@ export default function Pricing() {
     </section>
   );
 }
-
-const plans = [
-  {
-    name: "Free",
-    price: "0",
-    period: "forever",
-    description: "Perfect for small teams just getting started",
-    features: [
-      "Up to 10 team members",
-      "Basic random selection",
-      "5 selections per day",
-      "7-day history",
-    ],
-    buttonText: "Get Started Free",
-    buttonLink: "https://slack.com/apps",
-    popular: false,
-  },
-  {
-    name: "Pro",
-    price: "5",
-    period: "month",
-    description: "Ideal for growing teams with regular needs",
-    features: [
-      "Up to 50 team members",
-      "Advanced selection options",
-      "Unlimited selections",
-      "30-day history",
-      "Custom groups",
-      "Exclusion rules",
-    ],
-    buttonText: "Get Pro",
-    buttonLink: "https://slack.com/apps",
-    popular: true,
-  },
-  {
-    name: "Business",
-    price: "12",
-    period: "month",
-    description: "For larger teams with advanced requirements",
-    features: [
-      "Unlimited team members",
-      "All Pro features",
-      "Weighted selection",
-      "Unlimited history",
-      "Analytics dashboard",
-      "Priority support",
-    ],
-    buttonText: "Get Business",
-    buttonLink: "https://slack.com/apps",
-    popular: false,
-  },
-];

@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.798.0",
     "@aws-sdk/lib-dynamodb": "^3.798.0",
+    "@paddle/paddle-js": "^1.4.1",
     "@portabletext/react": "^3.2.1",
     "@sanity/client": "^6.28.4",
     "arctic": "^3.6.0",
