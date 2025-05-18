@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Environment variables required (add to your .env file):
 // VITE_PADDLE_CLIENT_TOKEN - Paddle client-side token
@@ -25,9 +25,41 @@ export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false);
 
   // Pricing data based on toggle
+  // State for dynamic Paddle price
+  const [proPrice, setProPrice] = useState<string | null>(null);
+  const [proPriceLoading, setProPriceLoading] = useState(false);
+  const proPriceId = isAnnual ? PADDLE_PRO_ANNUAL_PRICE_ID : PADDLE_PRO_MONTHLY_PRICE_ID;
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchProPrice() {
+      setProPriceLoading(true);
+      setProPrice(null);
+      try {
+        // Dynamically import Paddle.js
+        const { initializePaddle } = await import('@paddle/paddle-js');
+        const paddle = await initializePaddle({ token: PADDLE_CLIENT_TOKEN });
+        if (!paddle || !proPriceId) throw new Error('Paddle not initialized or priceId missing');
+        const preview = await paddle.PricePreview({
+          items: [{ priceId: proPriceId, quantity: 1 }],
+        });
+        // Find the price for this item (type guard for preview.totals)
+        const totals = (preview && typeof preview === 'object' && 'totals' in preview && Array.isArray((preview as any).totals)) ? (preview as any).totals : [];
+        const price = totals.find((t: any) => t.priceId === proPriceId)?.total || totals[0]?.total;
+        if (isMounted) setProPrice(price ? price.gross : null);
+      } catch (e) {
+        if (isMounted) setProPrice(null);
+      } finally {
+        if (isMounted) setProPriceLoading(false);
+      }
+    }
+    fetchProPrice();
+    return () => { isMounted = false; };
+  }, [isAnnual, proPriceId]);
+
   const proPlan: Plan = {
     name: "Pro",
-    price: isAnnual ? "50" : "5", // Example: $5/mo or $50/yr (update as needed)
+    price: proPriceLoading ? '...' : (proPrice ?? '?'),
     period: isAnnual ? "year" : "month",
     description: isAnnual
       ? "Best value for teams ready to commit. Save 17%!"
@@ -43,8 +75,9 @@ export default function Pricing() {
     buttonText: isAnnual ? "Get Pro Annually" : "Get Pro Monthly",
     buttonLink: undefined,
     popular: true,
-    priceId: isAnnual ? PADDLE_PRO_ANNUAL_PRICE_ID : PADDLE_PRO_MONTHLY_PRICE_ID,
+    priceId: proPriceId,
   };
+
 
   const plans: Plan[] = [
     {
