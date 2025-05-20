@@ -51,7 +51,8 @@ export const installationStore = {
       command = new GetItemCommand({ TableName: tableName, Key: { id: { S: installQuery.teamId }, type: { S: 'team' } } });
     }
     if (command) {
-      return JSON.parse((await dynamoClient.send(command)).Item.data.S);
+      const result = await dynamoClient.send(command);
+      return JSON.parse(result.Item.installationData.S);
     }
     throw new Error('Failed fetching installation');
   },
