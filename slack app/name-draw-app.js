@@ -249,71 +249,14 @@ export class NameDrawApp {
     });
 
     // Register view submission handlers
-    this.app.view(this.userInputViewId, async ({ ack, body, view, client, logger }) => {
-      await ack();
-
-      const namesSelection = view['state']['values'][this.userSelectBlockId][this.userSelectActionId].selected_users;
-      const user = body['user']['id'];
-      const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
-      const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
-
-      const max = namesSelection.length;
-
-      // Message to send
-      let msg = `<@${namesSelection[this.getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
-      let userList = namesSelection.reduce((prev, curr, index, arr) =>
-        `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
-        '');
-      let contextMsg = `${userList} were included in the draw. Draw performed by <@${user}>.`;
-
-      // Message the channel specified, try to join first
-      try {
-        await client.conversations.join({ channel: conversation.selected_conversation });
-      }
-      catch (error) {
-        logger.error(error);
-      }
-      try {
-        await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
-      }
-      catch (error) {
-        logger.error(error);
-      }
+    this.app.view(this.userInputViewId, async (params) => {
+      return await this.userViewSubmission(params);
     });
 
-    this.app.view(this.manualInputViewId, async ({ ack, body, view, client, logger }) => {
-      await ack();
-
-      const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
-      const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
-      const user = body['user']['id'];
-      const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
-      const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
-
-      const max = inputArray.length;
-
-      // Message to send
-      let msg = `_*${inputArray[this.getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
-      let inputList = inputArray.reduce((prev, curr, index, arr) =>
-        `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
-        '');
-      let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
-
-      // Message the channel specified, try to join first
-      try {
-        await client.conversations.join({ channel: conversation.selected_conversation });
-      }
-      catch (error) {
-        logger.error(error);
-      }
-      try {
-        await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
-      }
-      catch (error) {
-        logger.error(error);
-      }
+    this.app.view(this.manualInputViewId, async (params) => {
+      return await this.manualViewSubmission(params);
     });
-
+    
     // Register action handlers
     this.app.action(this.switchToUserActionId, async ({ ack, body, client }) => {
       await ack();
@@ -342,6 +285,79 @@ export class NameDrawApp {
         console.error(error);
       }
     });
+  }
+
+  /**
+   * Handle user selection view submission
+   * Exposed as a method for testing
+   */
+  async userViewSubmission({ ack, body, view, client, logger }) {
+    await ack();
+
+    const namesSelection = view['state']['values'][this.userSelectBlockId][this.userSelectActionId].selected_users;
+    const user = body['user']['id'];
+    const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
+    const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
+
+    const max = namesSelection.length;
+
+    // Message to send
+    let msg = `<@${namesSelection[this.getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
+    let userList = namesSelection.reduce((prev, curr, index, arr) =>
+      `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
+      '');
+    let contextMsg = `${userList} were included in the draw. Draw performed by <@${user}>.`;
+
+    // Message the channel specified, try to join first
+    try {
+      await client.conversations.join({ channel: conversation.selected_conversation });
+    }
+    catch (error) {
+      logger.error(error);
+    }
+    try {
+      await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
+    }
+    catch (error) {
+      logger.error(error);
+    }
+  }
+  
+  /**
+   * Handle manual input view submission
+   * Exposed as a method for testing
+   */
+  async manualViewSubmission({ ack, body, view, client, logger }) {
+    await ack();
+
+    const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
+    const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
+    const user = body['user']['id'];
+    const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
+    const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
+
+    const max = inputArray.length;
+
+    // Message to send
+    let msg = `_*${inputArray[this.getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
+    let inputList = inputArray.reduce((prev, curr, index, arr) =>
+      `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
+      '');
+    let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
+
+    // Message the channel specified, try to join first
+    try {
+      await client.conversations.join({ channel: conversation.selected_conversation });
+    }
+    catch (error) {
+      logger.error(error);
+    }
+    try {
+      await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
+    }
+    catch (error) {
+      logger.error(error);
+    }
   }
   
   /**
