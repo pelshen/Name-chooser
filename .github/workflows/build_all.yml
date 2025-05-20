@@ -21,3 +21,9 @@ jobs:
           npm ci --workspaces
           npm run build --workspaces --if-present
           npm run test --workspaces --if-present
+      
+      - name: npm ci and test slack app
+        run: |
+          cd slack app
+          npm ci
+          npm run test
