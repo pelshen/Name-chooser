@@ -58,6 +58,16 @@ plugins:
   - serverless-dynamodb
   - serverless-offline
 
+package:
+  individually: true
+  patterns:
+    - '!**'
+    - 'app.js'
+    - 'name-draw-app.js'
+    - 'package.json'
+    - 'installationStore.js'
+    - 'node_modules/**'
+
 custom:
   serverless-dynamodb:
     start:

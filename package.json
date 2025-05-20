@@ -2,7 +2,6 @@
   "private": true,
   "workspaces": [
     "website",
-    "cms",
-    "slack app"
+    "cms"
   ]
 }

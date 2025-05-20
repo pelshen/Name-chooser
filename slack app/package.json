@@ -6,7 +6,9 @@
   "scripts": {
     "test": "mocha",
     "start": "node --env-file .env app.js",
-    "debug": "SET SLS_DEBUG=* && node --env-file .env --inspect node_modules\\serverless\\bin\\serverless offline"
+    "debug": "SET SLS_DEBUG=* && node --env-file .env --inspect node_modules\\serverless\\bin\\serverless offline",
+    "deploy": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod"
   },
   "type": "module",
   "author": "",
