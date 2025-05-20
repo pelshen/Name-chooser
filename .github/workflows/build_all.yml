@@ -24,6 +24,6 @@ jobs:
       
       - name: npm ci and test slack app
         run: |
-          cd slack app
+          cd 'slack app'
           npm ci
           npm run test
