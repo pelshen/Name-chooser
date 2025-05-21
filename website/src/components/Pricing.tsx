@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
+import { initializePaddle } from '@paddle/paddle-js';
 
-// Environment variables required (add to your .env file):
-// VITE_PADDLE_CLIENT_TOKEN - Paddle client-side token
-// VITE_PADDLE_PRO_MONTHLY_PRICE_ID - Paddle Pro plan monthly price ID
-// VITE_PADDLE_PRO_ANNUAL_PRICE_ID - Paddle Pro plan annual price ID
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
 const PADDLE_PRO_MONTHLY_PRICE_ID = import.meta.env.VITE_PADDLE_PRO_MONTHLY_PRICE_ID;
 const PADDLE_PRO_ANNUAL_PRICE_ID = import.meta.env.VITE_PADDLE_PRO_ANNUAL_PRICE_ID;
@@ -28,6 +25,7 @@ export default function Pricing() {
   // State for dynamic Paddle price
   const [proPrice, setProPrice] = useState<string | null>(null);
   const [proPriceLoading, setProPriceLoading] = useState(false);
+  const [currencySymbol, setCurrencySymbol] = useState('$');
   const proPriceId = isAnnual ? PADDLE_PRO_ANNUAL_PRICE_ID : PADDLE_PRO_MONTHLY_PRICE_ID;
 
   useEffect(() => {
@@ -37,16 +35,21 @@ export default function Pricing() {
       setProPrice(null);
       try {
         // Dynamically import Paddle.js
-        const { initializePaddle } = await import('@paddle/paddle-js');
         const paddle = await initializePaddle({ token: PADDLE_CLIENT_TOKEN });
         if (!paddle || !proPriceId) throw new Error('Paddle not initialized or priceId missing');
+        if (process.env.NODE_ENV !== 'production') {
+          paddle.Environment.set('sandbox');
+        }
         const preview = await paddle.PricePreview({
           items: [{ priceId: proPriceId, quantity: 1 }],
         });
         // Find the price for this item (type guard for preview.totals)
-        const totals = (preview && typeof preview === 'object' && 'totals' in preview && Array.isArray((preview as any).totals)) ? (preview as any).totals : [];
-        const price = totals.find((t: any) => t.priceId === proPriceId)?.total || totals[0]?.total;
-        if (isMounted) setProPrice(price ? price.gross : null);
+        const lineItems = preview.data.details.lineItems;
+        const price = lineItems.find((li) => li.price.id === proPriceId)?.formattedTotals;
+        if (isMounted) {
+          setProPrice(price ? price.total : null);
+          setCurrencySymbol(price ? price.total[0] : '$');
+        }
       } catch (e) {
         if (isMounted) setProPrice(null);
       } finally {
@@ -78,11 +81,10 @@ export default function Pricing() {
     priceId: proPriceId,
   };
 
-
   const plans: Plan[] = [
     {
       name: "Free",
-      price: "0",
+      price: `${currencySymbol}0`,
       period: "forever",
       description: "Perfect for small teams just getting started",
       features: [
@@ -146,7 +148,7 @@ export default function Pricing() {
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">${plan.price}</span>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">{plan.price}</span>
                   {plan.period && <span className="text-gray-500 dark:text-gray-400">/{plan.period}</span>}
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.description}</p>
