@@ -93,12 +93,12 @@ export function Account() {
                   : 'Unlimited uses for all users in workspace'}
               />
               {user.plan === 'FREE' && (
-                <button
-                  className="ml-2 px-3 py-1 text-xs font-semibold rounded bg-purple-600 hover:bg-purple-700 text-white shadow"
-                  onClick={() => alert('Upgrade flow coming soon!')}
+                <a
+                  href="/subscription"
+                  className="ml-2 px-3 py-1 text-xs font-semibold rounded bg-purple-600 hover:bg-purple-700 text-white shadow inline-block"
                 >
                   Upgrade
-                </button>
+                </a>
               )}
             </span>
           </div>

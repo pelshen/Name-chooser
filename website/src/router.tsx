@@ -7,6 +7,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import DynamicPage from './pages/DynamicPage';
 import { Account } from "./pages/Account";
+import SubscriptionPage from "./pages/SubscriptionPage";
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: 'account',
         element: <Account />,
+      },
+      {
+        path: 'subscription',
+        element: <SubscriptionPage />,
       },
     ],
   },
