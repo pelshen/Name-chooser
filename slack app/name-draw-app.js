@@ -1,3 +1,5 @@
+import { canUserDraw, incrementUsage, getUsageMessage, isApproachingLimit } from './usageTracker.js';
+
 /**
  * Name Draw App for Slack
  * This class encapsulates all the functionality for the Name Draw app
@@ -204,12 +206,12 @@ export class NameDrawApp {
     // Register shortcut handlers
     this.app.shortcut('user_choose_shortcut', async ({ shortcut, ack, client, logger }) => {
       await ack();
-      return await this.triggerModal(shortcut.trigger_id, null, false, client, logger);
+      return await this.triggerModal(shortcut.trigger_id, null, false, client, logger, shortcut.user.id, shortcut.team.id);
     });
 
     this.app.shortcut('manual_input_shortcut', async ({ shortcut, ack, client, logger }) => {
       await ack();
-      return await this.triggerModal(shortcut.trigger_id, null, true, client, logger);
+      return await this.triggerModal(shortcut.trigger_id, null, true, client, logger, shortcut.user.id, shortcut.team.id);
     });
 
     // Register command handler
@@ -246,7 +248,7 @@ export class NameDrawApp {
           }
         }
       }
-      var result = await this.triggerModal(command.trigger_id, prefill, manual, client, logger);
+      var result = await this.triggerModal(command.trigger_id, prefill, manual, client, logger, command.user_id, command.team_id);
       return result;
     });
 
@@ -294,34 +296,55 @@ export class NameDrawApp {
    * Exposed as a method for testing
    */
   async userViewSubmission({ ack, body, view, client, logger }) {
-    await ack();
-
-    const namesSelection = view['state']['values'][this.userSelectBlockId][this.userSelectActionId].selected_users;
     const user = body['user']['id'];
-    const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
-    const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
-
-    const max = namesSelection.length;
-
-    // Message to send
-    let msg = `<@${namesSelection[this.getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
-    let userList = namesSelection.reduce((prev, curr, index, arr) =>
-      `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
-      '');
-    let contextMsg = `${userList} were included in the draw. Draw performed by <@${user}>.`;
-
-    // Message the channel specified, try to join first
+    const teamId = body['team']['id'];
+    
     try {
-      await client.conversations.join({ channel: conversation.selected_conversation });
-    }
-    catch (error) {
-      logger.error(error);
-    }
-    try {
-      await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
-    }
-    catch (error) {
-      logger.error(error);
+      await ack();
+      
+      // Get current usage to determine plan type, then increment
+      const { usage } = await canUserDraw(user, teamId);
+      const updatedUsage = await incrementUsage(user, teamId, usage.planType);
+      
+      const namesSelection = view['state']['values'][this.userSelectBlockId][this.userSelectActionId].selected_users;
+      const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
+      const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
+
+      const max = namesSelection.length;
+
+      // Message to send
+      let msg = `<@${namesSelection[this.getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
+      let userList = namesSelection.reduce((prev, curr, index, arr) =>
+        `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}<@${curr}>`,
+        '');
+      let contextMsg = `${userList} were included in the draw. Draw performed by <@${user}>.`;
+      
+      // Add usage info if approaching limit (only for free users after this draw)
+      if (isApproachingLimit(updatedUsage)) {
+        contextMsg += `\n\n⚠️ ${getUsageMessage(updatedUsage)}`;
+      }
+
+      // Message the channel specified, try to join first
+      try {
+        await client.conversations.join({ channel: conversation.selected_conversation });
+      }
+      catch (error) {
+        logger.error(error);
+      }
+      try {
+        await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
+      }
+      catch (error) {
+        logger.error(error);
+      }
+    } catch (error) {
+      logger.error('Error in userViewSubmission:', error);
+      await ack({
+        response_action: 'errors',
+        errors: {
+          [this.userSelectBlockId]: 'An error occurred. Please try again.'
+        }
+      });
     }
   }
   
@@ -330,52 +353,116 @@ export class NameDrawApp {
    * Exposed as a method for testing
    */
   async manualViewSubmission({ ack, body, view, client, logger }) {
-    await ack();
-
-    const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
-    const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
     const user = body['user']['id'];
-    const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
-    const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
-
-    const max = inputArray.length;
-
-    // Message to send
-    let msg = `_*${inputArray[this.getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
-    let inputList = inputArray.reduce((prev, curr, index, arr) =>
-      `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
-      '');
-    let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
-
-    // Message the channel specified, try to join first
+    const teamId = body['team']['id'];
+    
     try {
-      await client.conversations.join({ channel: conversation.selected_conversation });
-    }
-    catch (error) {
-      logger.error(error);
-    }
-    try {
-      await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
-    }
-    catch (error) {
-      logger.error(error);
+      await ack();
+      
+      // Get current usage to determine plan type, then increment
+      const { usage } = await canUserDraw(user, teamId);
+      const updatedUsage = await incrementUsage(user, teamId, usage.planType);
+
+      const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
+      const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
+      const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
+      const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
+
+      const max = inputArray.length;
+
+      // Message to send
+      let msg = `_*${inputArray[this.getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
+      let inputList = inputArray.reduce((prev, curr, index, arr) =>
+        `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
+        '');
+      let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
+      
+      // Add usage info if approaching limit (only for free users after this draw)
+      if (isApproachingLimit(updatedUsage)) {
+        contextMsg += `\n\n⚠️ ${getUsageMessage(updatedUsage)}`;
+      }
+
+      // Message the channel specified, try to join first
+      try {
+        await client.conversations.join({ channel: conversation.selected_conversation });
+      }
+      catch (error) {
+        logger.error(error);
+      }
+      try {
+        await client.chat.postMessage(this.chosenNamePost(conversation.selected_conversation, msg, contextMsg));
+      }
+      catch (error) {
+        logger.error(error);
+      }
+    } catch (error) {
+      logger.error('Error in manualViewSubmission:', error);
+      await ack({
+        response_action: 'errors',
+        errors: {
+          [this.manualInputBlockId]: 'An error occurred. Please try again.'
+        }
+      });
     }
   }
   
   /**
    * Trigger the modal dialog
    */
-  async triggerModal(triggerId, prefill, manual, client, logger) {
-    const view = manual ? { ...this.manualInputModalView } : { ...this.userInputModalView };
-    if (prefill) {
-      if (manual) {
-        view.blocks[0].element.initial_value = prefill.join('\r\n');
-      } else {
-        view.blocks[0].element.initial_users = prefill;
-      }
-    }
-
+  async triggerModal(triggerId, prefill, manual, client, logger, userId, teamId) {
+    // Check usage limits before showing the modal
     try {
+      const { allowed, usage, limit } = await canUserDraw(userId, teamId);
+      
+      if (!allowed) {
+        // Send ephemeral message instead of showing modal
+        await client.chat.postEphemeral({
+          channel: userId, // DM the user
+          user: userId,
+          text: `🚫 You've reached your limit of ${limit} draws this month!`,
+          blocks: [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": `🚫 *You've reached your limit of ${limit} draws this month!*\n\nPaid plans with unlimited draws coming soon! 🎉`
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": `📊 *Usage this month:* ${usage.usageCount}/${limit} draws used`
+              }
+            }
+          ]
+        });
+        return { ok: false, error: 'usage_limit_reached' };
+      }
+      
+      // Show usage warning if approaching limit
+      const view = manual ? { ...this.manualInputModalView } : { ...this.userInputModalView };
+      
+      // Add usage info to modal if approaching limit
+      if (isApproachingLimit(usage)) {
+        const warningBlock = {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": `⚠️ ${getUsageMessage(usage)}`
+          }
+        };
+        view.blocks.push(warningBlock);
+      }
+      
+      if (prefill) {
+        if (manual) {
+          view.blocks[0].element.initial_value = prefill.join('\r\n');
+        } else {
+          view.blocks[0].element.initial_users = prefill;
+        }
+      }
+
       // Call views.open with the built-in client
       const result = await client.views.open({
         trigger_id: triggerId,
@@ -384,7 +471,28 @@ export class NameDrawApp {
       return result;
     }
     catch (error) {
-      logger.error(error);
+      logger.error('Error in triggerModal:', error);
+      // Fallback - show modal anyway if usage check fails
+      const view = manual ? { ...this.manualInputModalView } : { ...this.userInputModalView };
+      if (prefill) {
+        if (manual) {
+          view.blocks[0].element.initial_value = prefill.join('\r\n');
+        } else {
+          view.blocks[0].element.initial_users = prefill;
+        }
+      }
+      
+      try {
+        const result = await client.views.open({
+          trigger_id: triggerId,
+          view: view
+        });
+        return result;
+      }
+      catch (modalError) {
+        logger.error('Error opening modal:', modalError);
+        return { ok: false, error: modalError };
+      }
     }
   }
   

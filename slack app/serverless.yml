@@ -66,6 +66,7 @@ package:
     - 'name-draw-app.js'
     - 'package.json'
     - 'installationStore.js'
+    - 'usageTracker.js'
     - 'node_modules/**'
 
 custom:
