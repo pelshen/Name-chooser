@@ -44,11 +44,11 @@ export const installationStore = {
     // Change the lines below so they fetch from your database
     if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
       // handle org wide app installation lookup
-      command = new GetItemCommand({ TableName: tableName, Key: { id: { S: installQuery.enterpriseId }, type: { S: 'enterprise' } } });
+      command = new GetItemCommand({ TableName: tableName, Key: { id: { S: installQuery.enterpriseId }, type: { S: 'installation' } } });
     }
     if (installQuery.teamId !== undefined) {
       // single team app installation lookup
-      command = new GetItemCommand({ TableName: tableName, Key: { id: { S: installQuery.teamId }, type: { S: 'team' } } });
+      command = new GetItemCommand({ TableName: tableName, Key: { id: { S: installQuery.teamId }, type: { S: 'installation' } } });
     }
     if (command) {
       const result = await dynamoClient.send(command);
@@ -62,11 +62,11 @@ export const installationStore = {
     // Change the lines below so they delete from your database
     if (installQuery.isEnterpriseInstall && installQuery.enterpriseId !== undefined) {
       // org wide app installation deletion
-      command = new DeleteItemCommand({ TableName: tableName, Key: { id: { S: installQuery.enterpriseId }, type: { S: 'enterprise' } } });
+      command = new DeleteItemCommand({ TableName: tableName, Key: { id: { S: installQuery.enterpriseId }, type: { S: 'installation' } } });
     }
     if (installQuery.teamId !== undefined) {
       // single team app installation deletion
-      command = new DeleteItemCommand({ TableName: tableName, Key: { id: { S: installQuery.teamId }, type: { S: 'team' } } });
+      command = new DeleteItemCommand({ TableName: tableName, Key: { id: { S: installQuery.teamId }, type: { S: 'installation' } } });
     }
     if (command) {
       return await dynamoClient.send(command);
