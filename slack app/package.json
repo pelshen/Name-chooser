@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "start": "node --env-file .env app.js",
+    "start": "node --env-file .env.dev app.js",
     "debug": "SET SLS_DEBUG=* && node --env-file .env --inspect node_modules\\serverless\\bin\\serverless offline",
     "deploy": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod"

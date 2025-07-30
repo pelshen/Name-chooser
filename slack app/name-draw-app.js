@@ -21,6 +21,8 @@ export class NameDrawApp {
     // View IDs
     this.userInputViewId = "user_input_view";
     this.manualInputViewId = "manual_input_view";
+
+    this.envSuffix = process.env.STAGE === 'dev' || process.env.STAGE === 'local' ? 'dev' : '';
     
     // Initialize UI components
     this.initializeUIComponents();
@@ -211,7 +213,7 @@ export class NameDrawApp {
     });
 
     // Register command handler
-    this.app.command('/drawnames', async ({ command, ack, client, logger }) => {
+    this.app.command('/drawnames' + this.envSuffix, async ({ command, ack, client, logger }) => {
       await ack();
       const commandText = command.text.trim();
       let prefill = [];
