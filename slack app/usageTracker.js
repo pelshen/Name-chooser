@@ -1,4 +1,12 @@
 import { DynamoDBClient, PutItemCommand, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { Analytics } from './analytics.js';
+
+// In-memory cache to track last limit attempt log time per user
+// Format: { "userId-teamId": timestamp }
+const lastLimitAttemptLog = new Map();
+
+// Rate limit: only log postLimitAttempt once per hour per user
+const LIMIT_ATTEMPT_LOG_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 let options = {};
 
@@ -85,6 +93,23 @@ export async function canUserDraw(userId, teamId) {
   
   // Free users are limited
   const allowed = usage.usageCount < FREE_PLAN_MONTHLY_LIMIT;
+  
+  // Track if user is hitting limit (with rate limiting)
+  if (!allowed) {
+    const userKey = `${userId}-${teamId}`;
+    const now = Date.now();
+    const lastLogged = lastLimitAttemptLog.get(userKey);
+    
+    // Only log if we haven't logged for this user in the last hour
+    if (!lastLogged || (now - lastLogged) >= LIMIT_ATTEMPT_LOG_INTERVAL_MS) {
+      Analytics.postLimitAttempt(userId, teamId, usage.planType, usage.usageCount, FREE_PLAN_MONTHLY_LIMIT, {
+        attempts_since_last_log: lastLogged ? Math.floor((now - lastLogged) / (1000 * 60)) : 0, // minutes since last log
+        is_rate_limited_event: true
+      });
+      lastLimitAttemptLog.set(userKey, now);
+    }
+  }
+  
   return { allowed, usage, limit: FREE_PLAN_MONTHLY_LIMIT };
 }
 
@@ -115,7 +140,7 @@ export async function incrementUsage(userId, teamId, planType = 'FREE') {
     
     const result = await dynamoClient.send(updateCommand);
     
-    return {
+    const updatedUsage = {
       userId,
       teamId,
       month: monthKey,
@@ -123,6 +148,33 @@ export async function incrementUsage(userId, teamId, planType = 'FREE') {
       planType: result.Attributes.planType.S,
       lastUsed: result.Attributes.lastUsed.S
     };
+    
+    // Track usage milestone events
+    if (updatedUsage.usageCount === 1) {
+      Analytics.firstTimeUser(userId, teamId, planType);
+    } else {
+      // Check if this is same-day repeat usage
+      const lastUsedDate = new Date(result.Attributes.lastUsed.S).toDateString();
+      const nowDate = new Date().toDateString();
+      if (lastUsedDate === nowDate) {
+        Analytics.repeatUsageSameDay(userId, teamId, planType, updatedUsage.usageCount);
+      } else {
+        const daysSinceLastUse = Math.floor((new Date() - new Date(result.Attributes.lastUsed.S)) / (1000 * 60 * 60 * 24));
+        Analytics.returningUser(userId, teamId, planType, daysSinceLastUse);
+      }
+    }
+    
+    // Track if approaching limit
+    if (isApproachingLimit(updatedUsage)) {
+      Analytics.usageLimitWarning(userId, teamId, planType, updatedUsage.usageCount, FREE_PLAN_MONTHLY_LIMIT);
+    }
+    
+    // Track if at limit
+    if (updatedUsage.usageCount >= FREE_PLAN_MONTHLY_LIMIT && planType === 'FREE') {
+      Analytics.usageLimitReached(userId, teamId, planType, updatedUsage.usageCount, FREE_PLAN_MONTHLY_LIMIT);
+    }
+    
+    return updatedUsage;
   } catch (error) {
     // If update fails (record doesn't exist), create new record
     if (error.name === 'ValidationException') {
@@ -143,7 +195,7 @@ export async function incrementUsage(userId, teamId, planType = 'FREE') {
       
       await dynamoClient.send(putCommand);
       
-      return {
+      const newUsage = {
         userId,
         teamId,
         month: monthKey,
@@ -151,6 +203,11 @@ export async function incrementUsage(userId, teamId, planType = 'FREE') {
         planType,
         lastUsed: now
       };
+      
+      // Track first time user
+      Analytics.firstTimeUser(userId, teamId, planType);
+      
+      return newUsage;
     }
     
     console.error('Error incrementing usage:', error);

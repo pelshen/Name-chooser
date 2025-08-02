@@ -17,7 +17,7 @@
     "@aws-sdk/client-dynamodb": "^3.623.0",
     "@codegenie/serverless-express": "^4.16.0",
     "@slack/bolt": "^3.19.0",
-    "dotenv": "^16.0.1"
+    "posthog-node": "~4.0.1"
   },
   "devDependencies": {
     "chai": "^5.2.0",

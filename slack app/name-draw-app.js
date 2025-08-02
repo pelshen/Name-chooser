@@ -1,4 +1,5 @@
 import { canUserDraw, incrementUsage, getUsageMessage, isApproachingLimit } from './usageTracker.js';
+import { Analytics } from './analytics.js';
 
 /**
  * Name Draw App for Slack
@@ -206,11 +207,15 @@ export class NameDrawApp {
     // Register shortcut handlers
     this.app.shortcut('user_choose_shortcut', async ({ shortcut, ack, client, logger }) => {
       await ack();
+      const { usage } = await canUserDraw(shortcut.user.id, shortcut.team.id);
+      Analytics.shortcutTriggered(shortcut.user.id, shortcut.team.id, usage.planType, 'user_choose_shortcut');
       return await this.triggerModal(shortcut.trigger_id, null, false, client, logger, shortcut.user.id, shortcut.team.id);
     });
 
     this.app.shortcut('manual_input_shortcut', async ({ shortcut, ack, client, logger }) => {
       await ack();
+      const { usage } = await canUserDraw(shortcut.user.id, shortcut.team.id);
+      Analytics.shortcutTriggered(shortcut.user.id, shortcut.team.id, usage.planType, 'manual_input_shortcut');
       return await this.triggerModal(shortcut.trigger_id, null, true, client, logger, shortcut.user.id, shortcut.team.id);
     });
 
@@ -248,6 +253,16 @@ export class NameDrawApp {
           }
         }
       }
+      
+      // Track slash command usage
+      const { usage } = await canUserDraw(command.user_id, command.team_id);
+      Analytics.slashCommandInitiated(command.user_id, command.team_id, usage.planType, {
+        command_text_length: commandText.length,
+        has_prefill: prefill.length > 0,
+        prefill_count: prefill.length,
+        manual_mode: manual
+      });
+      
       var result = await this.triggerModal(command.trigger_id, prefill, manual, client, logger, command.user_id, command.team_id);
       return result;
     });
@@ -311,6 +326,32 @@ export class NameDrawApp {
       const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
 
       const max = namesSelection.length;
+      
+      // Track draw execution
+      const channelType = conversation.selected_conversation.startsWith('C') ? 'public' : 'private';
+      Analytics.drawExecuted({
+        slackUserId: user,
+        teamId: teamId,
+        planType: updatedUsage.planType,
+        drawSize: max,
+        hasReason: !!reason,
+        channelType: channelType,
+        usageCount: updatedUsage.usageCount,
+        properties: {
+          input_method: 'user_selection',
+          selected_users_count: max
+        }
+      });
+      
+      // Track reason provided if applicable
+      if (reason && reason.trim()) {
+        Analytics.reasonProvided(user, teamId, updatedUsage.planType, reason.trim().length, {}, client);
+      }
+      
+      // Track large draw if applicable
+      if (max > 10) {
+        Analytics.largeDrawAttempted(user, teamId, updatedUsage.planType, max, {}, client);
+      }
 
       // Message to send
       let msg = `<@${namesSelection[this.getRandomInt(0, max)]}> was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
@@ -369,6 +410,33 @@ export class NameDrawApp {
       const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
 
       const max = inputArray.length;
+      
+      // Track draw execution
+      const channelType = conversation.selected_conversation.startsWith('C') ? 'public' : 'private';
+      Analytics.drawExecuted({
+        slackUserId: user,
+        teamId: teamId,
+        planType: updatedUsage.planType,
+        drawSize: max,
+        hasReason: !!reason,
+        channelType: channelType,
+        usageCount: updatedUsage.usageCount,
+        properties: {
+          input_method: 'manual_input',
+          input_items_count: max,
+          total_input_length: rawTextInput.length
+        }
+      });
+      
+      // Track reason provided if applicable
+      if (reason && reason.trim()) {
+        Analytics.reasonProvided(user, teamId, updatedUsage.planType, reason.trim().length, {}, client);
+      }
+      
+      // Track large draw if applicable
+      if (max > 10) {
+        Analytics.largeDrawAttempted(user, teamId, updatedUsage.planType, max, {}, client);
+      }
 
       // Message to send
       let msg = `_*${inputArray[this.getRandomInt(0, max)]}*_ was chosen at random${reason ? ' *' + reason + '*' : ''}!`;
@@ -415,6 +483,9 @@ export class NameDrawApp {
       const { allowed, usage, limit } = await canUserDraw(userId, teamId);
       
       if (!allowed) {
+        // Track limit reached event
+        Analytics.usageLimitReached(userId, teamId, usage.planType, usage.usageCount, limit, { context: 'modal_trigger' });
+        
         // Send ephemeral message instead of showing modal
         await client.chat.postEphemeral({
           channel: userId, // DM the user
@@ -440,11 +511,20 @@ export class NameDrawApp {
         return { ok: false, error: 'usage_limit_reached' };
       }
       
+      // Track modal opened
+      const inputMethod = manual ? 'manual' : 'user_selection';
+      Analytics.modalOpened(userId, teamId, usage.planType, inputMethod, {
+        has_prefill: prefill && prefill.length > 0,
+        prefill_count: prefill ? prefill.length : 0,
+        approaching_limit: isApproachingLimit(usage)
+      }, client);
+      
       // Show usage warning if approaching limit
       const view = manual ? { ...this.manualInputModalView } : { ...this.userInputModalView };
       
       // Add usage info to modal if approaching limit
       if (isApproachingLimit(usage)) {
+        Analytics.usageLimitWarning(userId, teamId, usage.planType, usage.usageCount, FREE_PLAN_MONTHLY_LIMIT, { context: 'modal_display' });
         const warningBlock = {
           "type": "section",
           "text": {
