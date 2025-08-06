@@ -9,7 +9,7 @@ process.env.POSTHOG_HOST = 'https://test.posthog.com';
 process.env.STAGE = 'test';
 
 // Import the module under test
-import { trackEvent, identifyUser, Analytics, shutdownAnalytics } from '../analytics.js';
+import { trackEvent, identifyUser, Analytics, shutdownAnalytics } from '../../analytics.js';
 
 describe('analytics', () => {
   let originalEnv;

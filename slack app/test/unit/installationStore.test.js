@@ -15,7 +15,7 @@ sinon.stub(aws.DynamoDBClient.prototype, 'send').callsFake(function() {
 });
 
 // Now import the module under test
-import { installationStore } from '../installationStore.js';
+import { installationStore } from '../../installationStore.js';
 
 describe('installationStore', () => {
   let originalEnv;

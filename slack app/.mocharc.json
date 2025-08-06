@@ -1,5 +1,9 @@
 {
   "node-option": [
     "experimental-vm-modules"
+  ],
+  "spec": [
+    "test/unit/**/*.test.js",
+    "test/integration/**/*.test.js"
   ]
 }

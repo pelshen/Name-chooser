@@ -59,16 +59,16 @@ describe('Name Draw App User Flows', () => {
     
     // Use esmock to mock the ES modules and import NameDrawApp
     try {
-      const { NameDrawApp: MockedNameDrawApp } = await esmock('../name-draw-app.js', {
-        '../usageTracker.js': mockUsageTracker,
-        '../analytics.js': mockAnalytics
+      const { NameDrawApp: MockedNameDrawApp } = await esmock('../../name-draw-app.js', {
+        '../../usageTracker.js': mockUsageTracker,
+        '../../analytics.js': mockAnalytics
       });
       
       NameDrawApp = MockedNameDrawApp;
     } catch (error) {
       console.error('Error setting up esmock:', error);
       // Fallback to direct import if esmock fails
-      const { NameDrawApp: DirectNameDrawApp } = await import('../name-draw-app.js');
+      const { NameDrawApp: DirectNameDrawApp } = await import('../../name-draw-app.js');
       NameDrawApp = DirectNameDrawApp;
     }
   });

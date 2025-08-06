@@ -50,9 +50,9 @@ describe('usageTracker', () => {
     Object.values(mockAnalytics.Analytics).forEach(stub => stub.reset());
     
     // Use esmock to mock the ES modules and import usageTracker
-    usageTrackerModule = await esmock('../usageTracker.js', {
+    usageTrackerModule = await esmock('../../usageTracker.js', {
       '@aws-sdk/client-dynamodb': mockDynamoDBClient,
-      '../analytics.js': mockAnalytics
+      '../../analytics.js': mockAnalytics
     });
     
     // Extract the functions we need to test

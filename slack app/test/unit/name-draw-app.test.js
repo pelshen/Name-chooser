@@ -56,9 +56,9 @@ describe('Name Draw App', () => {
     };
     
     // Use esmock to mock the ES modules and import NameDrawApp
-    const { NameDrawApp: MockedNameDrawApp } = await esmock('../name-draw-app.js', {
-      '../usageTracker.js': mockUsageTracker,
-      '../analytics.js': mockAnalytics
+    const { NameDrawApp: MockedNameDrawApp } = await esmock('../../name-draw-app.js', {
+      '../../usageTracker.js': mockUsageTracker,
+      '../../analytics.js': mockAnalytics
     });
     
     NameDrawApp = MockedNameDrawApp;
