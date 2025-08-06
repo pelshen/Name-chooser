@@ -54,7 +54,8 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.PutItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Item.id.S).to.equal('T12345');
-      expect(command.input.Item.type.S).to.equal('team');
+      expect(command.input.Item.type.S).to.equal('installation');
+      expect(command.input.Item.installationType.S).to.equal('team');
       expect(JSON.parse(command.input.Item.installationData.S)).to.deep.equal(teamInstallation);
     });
 
@@ -78,7 +79,8 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.PutItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Item.id.S).to.equal('E12345');
-      expect(command.input.Item.type.S).to.equal('enterprise');
+      expect(command.input.Item.type.S).to.equal('installation');
+      expect(command.input.Item.installationType.S).to.equal('enterprise');
       expect(JSON.parse(command.input.Item.installationData.S)).to.deep.equal(enterpriseInstallation);
     });
 
@@ -129,7 +131,7 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.GetItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Key.id.S).to.equal('T12345');
-      expect(command.input.Key.type.S).to.equal('team');
+      expect(command.input.Key.type.S).to.equal('installation');
     });
 
     it('should fetch enterprise installation', async () => {
@@ -160,7 +162,7 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.GetItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Key.id.S).to.equal('E12345');
-      expect(command.input.Key.type.S).to.equal('enterprise');
+      expect(command.input.Key.type.S).to.equal('installation');
     });
 
     it('should throw error for invalid query', async () => {
@@ -202,7 +204,7 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.DeleteItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Key.id.S).to.equal('T12345');
-      expect(command.input.Key.type.S).to.equal('team');
+      expect(command.input.Key.type.S).to.equal('installation');
     });
 
     it('should delete enterprise installation', async () => {
@@ -225,7 +227,7 @@ describe('installationStore', () => {
       expect(command).to.be.an.instanceOf(aws.DeleteItemCommand);
       // Skip table name check as it's initialized at module load time
       expect(command.input.Key.id.S).to.equal('E12345');
-      expect(command.input.Key.type.S).to.equal('enterprise');
+      expect(command.input.Key.type.S).to.equal('installation');
     });
 
     it('should throw error for invalid query', async () => {
