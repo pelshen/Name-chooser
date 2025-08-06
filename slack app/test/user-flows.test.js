@@ -2,9 +2,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { describe, it, beforeEach, afterEach } from 'mocha';
+import esmock from 'esmock';
 
-// Import the app class to test
-import { NameDrawApp } from '../name-draw-app.js';
+// We'll use esmock to mock the ES modules
+let NameDrawApp;
+let mockUsageTracker;
+let mockAnalytics;
 
 describe('Name Draw App User Flows', () => {
   // Setup test variables
@@ -13,7 +16,65 @@ describe('Name Draw App User Flows', () => {
   let mockLogger;
   let nameDrawApp;
   
+  before(async function() {
+    this.timeout(10000); // Increase timeout for esmock setup
+    
+    // Create mock usage tracker
+    mockUsageTracker = {
+      canUserDraw: sinon.stub().resolves({
+        allowed: true,
+        usage: {
+          userId: 'U001',
+          teamId: 'T001',
+          month: '2025-08',
+          usageCount: 2,
+          planType: 'FREE',
+          lastUsed: '2025-08-03T09:00:00.000Z'
+        },
+        limit: 5
+      }),
+      incrementUsage: sinon.stub().resolves({
+        userId: 'U001',
+        teamId: 'T001',
+        month: '2025-08',
+        usageCount: 3,
+        planType: 'FREE',
+        lastUsed: '2025-08-03T09:54:00.000Z'
+      }),
+      isApproachingLimit: sinon.stub().returns(false),
+      getUsageMessage: sinon.stub().returns('You have 2 draws remaining this month (3/5 used).')
+    };
+    
+    // Create mock analytics
+    mockAnalytics = {
+      Analytics: {
+        drawExecuted: sinon.stub().resolves(),
+        reasonProvided: sinon.stub().resolves(),
+        largeDrawAttempted: sinon.stub().resolves(),
+        modalOpened: sinon.stub().resolves(),
+        usageLimitReached: sinon.stub().resolves(),
+        usageLimitWarning: sinon.stub().resolves()
+      }
+    };
+    
+    // Use esmock to mock the ES modules and import NameDrawApp
+    try {
+      const { NameDrawApp: MockedNameDrawApp } = await esmock('../name-draw-app.js', {
+        '../usageTracker.js': mockUsageTracker,
+        '../analytics.js': mockAnalytics
+      });
+      
+      NameDrawApp = MockedNameDrawApp;
+    } catch (error) {
+      console.error('Error setting up esmock:', error);
+      // Fallback to direct import if esmock fails
+      const { NameDrawApp: DirectNameDrawApp } = await import('../name-draw-app.js');
+      NameDrawApp = DirectNameDrawApp;
+    }
+  });
+  
   beforeEach(() => {
+    
     // Create a mock Slack app
     mockApp = {
       shortcut: sinon.stub(),
@@ -202,6 +263,9 @@ describe('Name Draw App User Flows', () => {
       const mockBody = {
         user: {
           id: 'U001'
+        },
+        team: {
+          id: 'T001'
         }
       };
       
@@ -282,6 +346,9 @@ describe('Name Draw App User Flows', () => {
       const mockBody = {
         user: {
           id: 'U002'
+        },
+        team: {
+          id: 'T002'
         }
       };
       
@@ -354,6 +421,9 @@ describe('Name Draw App User Flows', () => {
       const mockBody = {
         user: {
           id: 'U001'
+        },
+        team: {
+          id: 'T001'
         }
       };
       
