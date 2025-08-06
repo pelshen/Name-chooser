@@ -4,6 +4,11 @@ import sinon from 'sinon';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 import esmock from 'esmock';
 
+// Import shared test utilities
+import { createMockUsageTracker, createMockAnalytics, createMockSlackApp, createMockSlackClient } from '../fixtures/mockServices.js';
+import { testUsers, usageData } from '../fixtures/mockData.js';
+import { resetAllStubs } from '../fixtures/testHelpers.js';
+
 // We'll use esmock to mock the ES modules
 let NameDrawApp;
 let mockUsageTracker;
@@ -19,43 +24,19 @@ describe('Name Draw App User Flows', () => {
   before(async function() {
     this.timeout(10000); // Increase timeout for esmock setup
     
-    // Create mock usage tracker
-    mockUsageTracker = {
-      canUserDraw: sinon.stub().resolves({
-        allowed: true,
-        usage: {
-          userId: 'U001',
-          teamId: 'T001',
-          month: '2025-08',
-          usageCount: 2,
-          planType: 'FREE',
-          lastUsed: '2025-08-03T09:00:00.000Z'
-        },
-        limit: 5
-      }),
-      incrementUsage: sinon.stub().resolves({
-        userId: 'U001',
-        teamId: 'T001',
-        month: '2025-08',
-        usageCount: 3,
-        planType: 'FREE',
-        lastUsed: '2025-08-03T09:54:00.000Z'
-      }),
-      isApproachingLimit: sinon.stub().returns(false),
-      getUsageMessage: sinon.stub().returns('You have 2 draws remaining this month (3/5 used).')
-    };
-    
-    // Create mock analytics
-    mockAnalytics = {
-      Analytics: {
-        drawExecuted: sinon.stub().resolves(),
-        reasonProvided: sinon.stub().resolves(),
-        largeDrawAttempted: sinon.stub().resolves(),
-        modalOpened: sinon.stub().resolves(),
-        usageLimitReached: sinon.stub().resolves(),
-        usageLimitWarning: sinon.stub().resolves()
+    // Create shared mocks using utilities
+    mockUsageTracker = createMockUsageTracker({
+      customStubs: {
+        canUserDraw: sinon.stub().resolves({
+          allowed: true,
+          usage: usageData.freeUserUsage,
+          limit: 5
+        }),
+        incrementUsage: sinon.stub().resolves(usageData.incrementedUsage)
       }
-    };
+    });
+    
+    mockAnalytics = createMockAnalytics();
     
     // Use esmock to mock the ES modules and import NameDrawApp
     try {
@@ -74,31 +55,19 @@ describe('Name Draw App User Flows', () => {
   });
   
   beforeEach(() => {
+    // Create shared mocks using utilities
+    mockApp = createMockSlackApp();
+    mockClient = createMockSlackClient({
+      chatPostMessageResponse: { ok: true, ts: '1234567890.123456' }
+    });
     
-    // Create a mock Slack app
-    mockApp = {
-      shortcut: sinon.stub(),
-      command: sinon.stub(),
-      view: sinon.stub(),
-      action: sinon.stub()
+    // Add additional mock methods needed for this test
+    mockClient.conversations = {
+      join: sinon.stub().resolves({ ok: true })
     };
-    
-    // Mock client for testing
-    mockClient = {
-      views: {
-        open: sinon.stub().resolves({ ok: true }),
-        update: sinon.stub().resolves({ ok: true })
-      },
-      conversations: {
-        join: sinon.stub().resolves({ ok: true })
-      },
-      chat: {
-        postMessage: sinon.stub().resolves({ ok: true })
-      },
-      usergroups: {
-        users: {
-          list: sinon.stub().resolves({ ok: true, users: ['U789', 'U101'] })
-        }
+    mockClient.usergroups = {
+      users: {
+        list: sinon.stub().resolves({ ok: true, users: [testUsers.user2.id, testUsers.user3.id] })
       }
     };
     
@@ -106,6 +75,10 @@ describe('Name Draw App User Flows', () => {
     mockLogger = {
       error: sinon.spy()
     };
+    
+    // Reset all mocks from previous tests
+    resetAllStubs(mockUsageTracker);
+    resetAllStubs(mockAnalytics);
     
     // Create the app instance with our mock
     nameDrawApp = new NameDrawApp(mockApp);

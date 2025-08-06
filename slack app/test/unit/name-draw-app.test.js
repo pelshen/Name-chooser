@@ -4,6 +4,10 @@ import sinon from 'sinon';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 import esmock from 'esmock';
 
+// Import shared test utilities
+import { createMockUsageTracker, createMockAnalytics, createMockSlackApp, createMockSlackClient } from '../fixtures/mockServices.js';
+import { testUsers, testTeams, usageData } from '../fixtures/mockData.js';
+
 // We'll use esmock to mock the ES modules
 let NameDrawApp;
 let mockUsageTracker;
@@ -17,43 +21,19 @@ describe('Name Draw App', () => {
   let nameDrawApp;
   
   beforeEach(async () => {
-    // Create mock usage tracker
-    mockUsageTracker = {
-      canUserDraw: sinon.stub().resolves({
-        allowed: true,
-        usage: {
-          userId: 'U001',
-          teamId: 'T001',
-          month: '2025-08',
-          usageCount: 2,
-          planType: 'FREE',
-          lastUsed: '2025-08-03T09:00:00.000Z'
-        },
-        limit: 5
-      }),
-      incrementUsage: sinon.stub().resolves({
-        userId: 'U001',
-        teamId: 'T001',
-        month: '2025-08',
-        usageCount: 3,
-        planType: 'FREE',
-        lastUsed: '2025-08-03T09:54:00.000Z'
-      }),
-      isApproachingLimit: sinon.stub().returns(false),
-      getUsageMessage: sinon.stub().returns('You have 2 draws remaining this month (3/5 used).')
-    };
-    
-    // Create mock analytics
-    mockAnalytics = {
-      Analytics: {
-        drawExecuted: sinon.stub().resolves(),
-        reasonProvided: sinon.stub().resolves(),
-        largeDrawAttempted: sinon.stub().resolves(),
-        modalOpened: sinon.stub().resolves(),
-        usageLimitReached: sinon.stub().resolves(),
-        usageLimitWarning: sinon.stub().resolves()
+    // Create shared mocks using utilities
+    mockUsageTracker = createMockUsageTracker({
+      customStubs: {
+        canUserDraw: sinon.stub().resolves({
+          allowed: true,
+          usage: usageData.freeUserUsage,
+          limit: 5
+        }),
+        incrementUsage: sinon.stub().resolves(usageData.incrementedUsage)
       }
-    };
+    });
+    
+    mockAnalytics = createMockAnalytics();
     
     // Use esmock to mock the ES modules and import NameDrawApp
     const { NameDrawApp: MockedNameDrawApp } = await esmock('../../name-draw-app.js', {

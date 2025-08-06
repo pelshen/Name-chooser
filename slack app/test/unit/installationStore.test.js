@@ -3,11 +3,13 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import * as aws from '@aws-sdk/client-dynamodb';
 
-// Set environment variables before importing the module
-process.env.ACCOUNT_TABLE = 'test-table';
+// Import shared test utilities
+import { setupDynamoDBTestEnv, restoreEnvironment } from '../fixtures/testHelpers.js';
+import { createMockDynamoDBClient } from '../fixtures/mockServices.js';
+import { testUsers, testTeams, installationData } from '../fixtures/mockData.js';
 
 // Create a mock for the send method
-const mockSend = sinon.stub();
+let mockSend;
 
 // Create our spy before importing the module under test
 sinon.stub(aws.DynamoDBClient.prototype, 'send').callsFake(function() {
@@ -21,25 +23,23 @@ describe('installationStore', () => {
   let originalEnv;
 
   beforeEach(() => {
-    // Save original environment variables
-    originalEnv = { ...process.env };
+    // Set up test environment
+    originalEnv = setupDynamoDBTestEnv();
     
-    // Reset the stub before each test
-    mockSend.reset();
+    // Create fresh mock for each test
+    const dynamoMock = createMockDynamoDBClient();
+    mockSend = dynamoMock.mockSend;
   });
 
   afterEach(() => {
     // Restore original environment
-    process.env = originalEnv;
+    restoreEnvironment(originalEnv);
   });
 
   describe('storeInstallation', () => {
     it('should store team installation', async () => {
       // Arrange
-      const teamInstallation = {
-        team: { id: 'T12345' },
-        isEnterpriseInstall: false
-      };
+      const teamInstallation = installationData.teamInstallation;
       mockSend.resolves({ success: true });
 
       // Act
@@ -53,7 +53,7 @@ describe('installationStore', () => {
       const command = mockSend.firstCall.args[0];
       expect(command).to.be.an.instanceOf(aws.PutItemCommand);
       // Skip table name check as it's initialized at module load time
-      expect(command.input.Item.id.S).to.equal('T12345');
+      expect(command.input.Item.id.S).to.equal(testTeams.team1.id);
       expect(command.input.Item.type.S).to.equal('installation');
       expect(command.input.Item.installationType.S).to.equal('team');
       expect(JSON.parse(command.input.Item.installationData.S)).to.deep.equal(teamInstallation);
@@ -61,10 +61,7 @@ describe('installationStore', () => {
 
     it('should store enterprise installation', async () => {
       // Arrange
-      const enterpriseInstallation = {
-        enterprise: { id: 'E12345' },
-        isEnterpriseInstall: true
-      };
+      const enterpriseInstallation = installationData.enterpriseInstallation;
       mockSend.resolves({ success: true });
 
       // Act
@@ -78,7 +75,7 @@ describe('installationStore', () => {
       const command = mockSend.firstCall.args[0];
       expect(command).to.be.an.instanceOf(aws.PutItemCommand);
       // Skip table name check as it's initialized at module load time
-      expect(command.input.Item.id.S).to.equal('E12345');
+      expect(command.input.Item.id.S).to.equal(enterpriseInstallation.enterprise.id);
       expect(command.input.Item.type.S).to.equal('installation');
       expect(command.input.Item.installationType.S).to.equal('enterprise');
       expect(JSON.parse(command.input.Item.installationData.S)).to.deep.equal(enterpriseInstallation);

@@ -1,53 +1,30 @@
 // Tests for usageTracker.js
 import { expect } from 'chai';
-import sinon from 'sinon';
 import esmock from 'esmock';
 import * as aws from '@aws-sdk/client-dynamodb';
 
-// Set environment variables before importing the module
-process.env.USAGE_TABLE = 'test-usage-table';
-process.env.ACCOUNT_TABLE = 'test-account-table';
-
-// Create a mock for the DynamoDB send method
-const mockSend = sinon.stub();
-
-// Mock Analytics to prevent actual PostHog calls
-const mockAnalytics = {
-  Analytics: {
-    firstTimeUser: sinon.stub().resolves(),
-    returningUser: sinon.stub().resolves(),
-    repeatUsageSameDay: sinon.stub().resolves(),
-    usageLimitWarning: sinon.stub().resolves(),
-    usageLimitReached: sinon.stub().resolves(),
-    postLimitAttempt: sinon.stub().resolves()
-  }
-};
-
-// Mock DynamoDB client
-const mockDynamoDBClient = {
-  DynamoDBClient: class {
-    constructor() {}
-    send = mockSend
-  },
-  PutItemCommand: aws.PutItemCommand,
-  GetItemCommand: aws.GetItemCommand,
-  UpdateItemCommand: aws.UpdateItemCommand
-};
+// Import shared test utilities
+import { setupDynamoDBTestEnv, restoreEnvironment } from '../fixtures/testHelpers.js';
+import { createMockDynamoDBClient, createMockAnalytics } from '../fixtures/mockServices.js';
+import { testUsers, testTeams, usageData } from '../fixtures/mockData.js';
 
 // Import the module under test with mocks
 let usageTrackerModule;
 let getUserUsage, canUserDraw, incrementUsage, isApproachingLimit, getUsageMessage;
+let mockDynamoDBClient, mockSend, mockAnalytics;
 
 describe('usageTracker', () => {
   let originalEnv;
 
   beforeEach(async () => {
-    // Save original environment variables
-    originalEnv = { ...process.env };
+    // Set up test environment
+    originalEnv = setupDynamoDBTestEnv();
     
-    // Reset all stubs before each test
-    mockSend.reset();
-    Object.values(mockAnalytics.Analytics).forEach(stub => stub.reset());
+    // Create fresh mocks for each test
+    const dynamoMock = createMockDynamoDBClient();
+    mockDynamoDBClient = dynamoMock.mockDynamoDBClient;
+    mockSend = dynamoMock.mockSend;
+    mockAnalytics = createMockAnalytics();
     
     // Use esmock to mock the ES modules and import usageTracker
     usageTrackerModule = await esmock('../../usageTracker.js', {
@@ -61,19 +38,19 @@ describe('usageTracker', () => {
 
   afterEach(() => {
     // Restore original environment
-    process.env = originalEnv;
+    restoreEnvironment(originalEnv);
   });
 
   describe('getUserUsage', () => {
     it('should return existing usage record', async () => {
       // Arrange
-      const userId = 'U123';
-      const teamId = 'T123';
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
       const mockUsageData = {
         Item: {
-          usageCount: { N: '3' },
-          planType: { S: 'FREE' },
-          lastUsed: { S: '2025-08-03T09:00:00.000Z' }
+          usageCount: { N: usageData.freeUserUsage.usageCount.toString() },
+          planType: { S: usageData.freeUserUsage.planType },
+          lastUsed: { S: usageData.freeUserUsage.lastUsed }
         }
       };
       mockSend.resolves(mockUsageData);
@@ -85,9 +62,9 @@ describe('usageTracker', () => {
       expect(result).to.deep.include({
         userId,
         teamId,
-        usageCount: 3,
-        planType: 'FREE',
-        lastUsed: '2025-08-03T09:00:00.000Z'
+        usageCount: usageData.freeUserUsage.usageCount,
+        planType: usageData.freeUserUsage.planType,
+        lastUsed: usageData.freeUserUsage.lastUsed
       });
       expect(result.month).to.match(/^\d{4}-\d{2}$/); // YYYY-MM format
       
@@ -100,8 +77,8 @@ describe('usageTracker', () => {
 
     it('should return default usage record when none exists', async () => {
       // Arrange
-      const userId = 'U456';
-      const teamId = 'T456';
+      const userId = testUsers.user3.id;
+      const teamId = testTeams.team2.id;
       mockSend.resolves({}); // No Item in response
 
       // Act
@@ -120,8 +97,8 @@ describe('usageTracker', () => {
 
     it('should handle DynamoDB errors', async () => {
       // Arrange
-      const userId = 'U789';
-      const teamId = 'T789';
+      const userId = testUsers.user2.id;
+      const teamId = testTeams.team1.id;
       const error = new Error('DynamoDB error');
       mockSend.rejects(error);
 

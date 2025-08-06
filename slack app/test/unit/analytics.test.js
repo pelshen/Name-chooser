@@ -3,10 +3,9 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 
-// Set test environment variables before importing
-process.env.POSTHOG_API_KEY = '';
-process.env.POSTHOG_HOST = 'https://test.posthog.com';
-process.env.STAGE = 'test';
+// Import shared test utilities
+import { setupAnalyticsTestEnv, restoreEnvironment, createAfterEach } from '../fixtures/testHelpers.js';
+import { testUsers, testTeams } from '../fixtures/mockData.js';
 
 // Import the module under test
 import { trackEvent, identifyUser, Analytics, shutdownAnalytics } from '../../analytics.js';
@@ -15,130 +14,167 @@ describe('analytics', () => {
   let originalEnv;
 
   beforeEach(() => {
-    // Save original environment variables
-    originalEnv = { ...process.env };
+    // Set up analytics test environment
+    originalEnv = setupAnalyticsTestEnv();
   });
 
   afterEach(() => {
     // Restore original environment
-    process.env = originalEnv;
+    restoreEnvironment(originalEnv);
   });
 
   describe('trackEvent', () => {
     it('should handle missing PostHog configuration gracefully', async () => {
-      // Arrange - POSTHOG_API_KEY is empty
+      // Arrange - POSTHOG_API_KEY is empty (set by setupAnalyticsTestEnv)
+      const eventName = 'test_event';
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
       
       // Act - should not throw
-      await trackEvent('test_event', 'U123', 'T123');
+      const result = await trackEvent(eventName, userId, teamId);
       
-      // Assert - should complete without error
-      expect(true).to.be.true; // Basic assertion to verify test runs
+      // Assert - should complete without error and return undefined
+      expect(result).to.be.undefined;
     });
   });
 
   describe('identifyUser', () => {
     it('should handle missing PostHog configuration gracefully', async () => {
-      // Arrange - POSTHOG_API_KEY is empty
+      // Arrange - POSTHOG_API_KEY is empty (set by setupAnalyticsTestEnv)
+      const userId = testUsers.user2.id;
+      const teamId = testTeams.team1.id;
       
       // Act - should not throw
-      await identifyUser('U123', 'T123');
+      const result = await identifyUser(userId, teamId);
       
-      // Assert - should complete without error
-      expect(true).to.be.true; // Basic assertion to verify test runs
+      // Assert - should complete without error and return undefined
+      expect(result).to.be.undefined;
     });
   });
 
   describe('Analytics event methods', () => {
-    let trackEventStub;
-    
-    beforeEach(() => {
-      // Stub trackEvent to avoid actual PostHog calls in these tests
-      trackEventStub = sinon.stub().resolves();
-      // We'll mock the trackEvent function directly
-    });
-
     it('should call trackEvent for slashCommandInitiated', async () => {
-      // Act
-      await Analytics.slashCommandInitiated('U123', 'T123', 'FREE', { test: 'prop' });
+      // Arrange
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
+      const planType = 'FREE';
+      const properties = { test: 'prop' };
+      
+      // Act - should not throw
+      const result = await Analytics.slashCommandInitiated(userId, teamId, planType, properties);
 
-      // Assert - we'll need to verify the Analytics method was called
-      // For now, we'll just verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.slashCommandInitiated).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for drawExecuted with correct properties', async () => {
-      // Act
-      await Analytics.drawExecuted({
-        slackUserId: 'U123',
-        teamId: 'T123',
+      // Arrange
+      const drawData = {
+        slackUserId: testUsers.user1.id,
+        teamId: testTeams.team1.id,
         planType: 'FREE',
         drawSize: 5,
         hasReason: true,
         channelType: 'public',
         usageCount: 3,
         properties: { custom: 'prop' }
-      });
+      };
+      
+      // Act - should not throw
+      const result = await Analytics.drawExecuted(drawData);
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.drawExecuted).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for usageLimitReached', async () => {
-      // Act
-      await Analytics.usageLimitReached('U123', 'T123', 'FREE', 5, 5, { context: 'modal' });
+      // Arrange
+      const userId = testUsers.user2.id;
+      const teamId = testTeams.team1.id;
+      
+      // Act - should not throw
+      const result = await Analytics.usageLimitReached(userId, teamId, 'FREE', 5, 5, { context: 'modal' });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.usageLimitReached).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for modalOpened', async () => {
-      // Act
-      await Analytics.modalOpened('U123', 'T123', 'FREE', 'user_selection', { has_prefill: true });
+      // Arrange
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team2.id;
+      
+      // Act - should not throw
+      const result = await Analytics.modalOpened(userId, teamId, 'FREE', 'user_selection', { has_prefill: true });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.modalOpened).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for reasonProvided', async () => {
-      // Act
-      await Analytics.reasonProvided('U123', 'T123', 'FREE', 25, { context: 'draw' });
+      // Arrange
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
+      
+      // Act - should not throw
+      const result = await Analytics.reasonProvided(userId, teamId, 'FREE', 25, { context: 'draw' });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.reasonProvided).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for largeDrawAttempted', async () => {
-      // Act
-      await Analytics.largeDrawAttempted('U123', 'T123', 'FREE', 15, { context: 'manual' });
+      // Arrange
+      const userId = testUsers.user2.id;
+      const teamId = testTeams.team1.id;
+      
+      // Act - should not throw
+      const result = await Analytics.largeDrawAttempted(userId, teamId, 'FREE', 15, { context: 'manual' });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.largeDrawAttempted).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for firstTimeUser', async () => {
-      // Act
-      await Analytics.firstTimeUser('U123', 'T123', 'FREE', { source: 'shortcut' });
+      // Arrange
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
+      
+      // Act - should not throw
+      const result = await Analytics.firstTimeUser(userId, teamId, 'FREE', { source: 'shortcut' });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.firstTimeUser).to.be.a('function');
+      expect(result).to.be.undefined;
     });
 
     it('should call trackEvent for returningUser', async () => {
-      // Act
-      await Analytics.returningUser('U123', 'T123', 'FREE', 7, { context: 'weekly' });
+      // Arrange
+      const userId = testUsers.user1.id;
+      const teamId = testTeams.team1.id;
+      
+      // Act - should not throw
+      const result = await Analytics.returningUser(userId, teamId, 'FREE', 7, { context: 'weekly' });
 
-      // Assert - verify the method exists and can be called
+      // Assert - method exists and completes without error
       expect(Analytics.returningUser).to.be.a('function');
+      expect(result).to.be.undefined;
     });
   });
 
   describe('shutdownAnalytics', () => {
     it('should handle shutdown gracefully', async () => {
       // Act - should not throw
-      await shutdownAnalytics();
+      const result = await shutdownAnalytics();
       
-      // Assert - should complete without error
-      expect(true).to.be.true; // Basic assertion to verify test runs
+      // Assert - should complete without error and return undefined
+      expect(result).to.be.undefined;
     });
   });
 });
