@@ -524,7 +524,7 @@ export class NameDrawApp {
       
       // Add usage info to modal if approaching limit
       if (isApproachingLimit(usage)) {
-        Analytics.usageLimitWarning(userId, teamId, usage.planType, usage.usageCount, FREE_PLAN_MONTHLY_LIMIT, { context: 'modal_display' });
+        Analytics.usageLimitWarning(userId, teamId, usage.planType, usage.usageCount, limit, { context: 'modal_display' });
         const warningBlock = {
           "type": "section",
           "text": {
