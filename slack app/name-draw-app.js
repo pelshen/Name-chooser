@@ -405,7 +405,10 @@ export class NameDrawApp {
       const updatedUsage = await incrementUsage(user, teamId, usage.planType);
 
       const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
-      const inputArray = rawTextInput.split(/\r?\n/).map((val) => val.trim());
+      const inputArray = rawTextInput
+        .split(/\r?\n/)
+        .map((val) => val.trim())
+        .filter((val) => val.length > 0);
       const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
       const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
 

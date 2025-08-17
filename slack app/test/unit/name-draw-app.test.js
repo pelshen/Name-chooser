@@ -196,4 +196,81 @@ describe('Name Draw App', () => {
       )).to.be.true;
     });
   });
+
+  describe('manualViewSubmission', () => {
+    let ack;
+
+    function buildViewPayload(appInstance, rawTextInput, reason = 'for fun', channel = 'C12345') {
+      return {
+        state: {
+          values: {
+            [appInstance.manualInputBlockId]: {
+              [appInstance.manualInputActionId]: { value: rawTextInput }
+            },
+            [appInstance.reasonInputBlockId]: {
+              [appInstance.reasonInputActionId]: { value: reason }
+            },
+            [appInstance.conversationSelectBlockId]: {
+              [appInstance.conversationSelectActionId]: { selected_conversation: channel }
+            }
+          }
+        }
+      };
+    }
+
+    beforeEach(() => {
+      ack = sinon.stub().resolves();
+    });
+
+    it('trims input lines and skips blank/whitespace-only lines', async () => {
+      const raw = '  Alice  \n\n Bob\n \nCharlie  \n';
+      const view = buildViewPayload(nameDrawApp, raw);
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      // deterministic selection: pick Bob (index 1 after filtering)
+      sinon.stub(nameDrawApp, 'getRandomInt').returns(1);
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      expect(ack.calledOnce).to.be.true;
+      expect(mockClient.conversations.join.calledWith({ channel: 'C12345' })).to.be.true;
+
+      const payload = mockClient.chat.postMessage.getCall(0).args[0];
+      expect(payload.text).to.contain('_*Bob*_');
+
+      const context = payload.blocks[1].elements[0].text;
+      expect(context).to.contain('Alice, Bob and Charlie');
+
+      expect(mockAnalytics.Analytics.drawExecuted.called).to.be.true;
+      const drawArgs = mockAnalytics.Analytics.drawExecuted.getCall(0).args[0];
+      expect(drawArgs.drawSize).to.equal(3);
+      expect(drawArgs.properties.input_items_count).to.equal(3);
+    });
+
+    it('preserves special characters and unicode in output', async () => {
+      const names = [
+        'José',
+        "O'Connor",
+        'Acme™',
+        'Alice & Bob',
+        'Nord—Ångström',
+        'Emoji 😀',
+        'A_B*C'
+      ];
+      const raw = names.join('\n');
+      const view = buildViewPayload(nameDrawApp, raw, 'special test');
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      sinon.stub(nameDrawApp, 'getRandomInt').returns(0);
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      const payload = mockClient.chat.postMessage.getCall(0).args[0];
+      expect(payload.text).to.contain('_*José*_');
+
+      const context = payload.blocks[1].elements[0].text;
+      names.forEach(n => expect(context).to.contain(n));
+      expect(context).to.match(/José, O'Connor, Acme™, Alice & Bob, Nord—Ångström, Emoji 😀 and A_B\*C/);
+    });
+  });
 });
