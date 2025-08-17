@@ -409,6 +409,16 @@ export class NameDrawApp {
         .split(/\r?\n/)
         .map((val) => val.trim())
         .filter((val) => val.length > 0);
+      // Validate at least one item provided
+      if (inputArray.length === 0) {
+        await ack({
+          response_action: 'errors',
+          errors: {
+            [this.manualInputBlockId]: 'Please add at least one item.'
+          }
+        });
+        return;
+      }
       const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
       const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
 

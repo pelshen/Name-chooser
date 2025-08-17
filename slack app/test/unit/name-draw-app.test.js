@@ -272,5 +272,54 @@ describe('Name Draw App', () => {
       names.forEach(n => expect(context).to.contain(n));
       expect(context).to.match(/José, O'Connor, Acme™, Alice & Bob, Nord—Ångström, Emoji 😀 and A_B\*C/);
     });
+
+    it('returns a field error when no valid items are provided', async () => {
+      const raw = '   \n\r\n   ';
+      const view = buildViewPayload(nameDrawApp, raw);
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      // first ack happens at start; second should include errors
+      expect(ack.callCount).to.be.greaterThan(1);
+      const errorAck = ack.getCall(1).args[0];
+      expect(errorAck.response_action).to.equal('errors');
+      expect(errorAck.errors).to.have.property(nameDrawApp.manualInputBlockId);
+      // no message should be posted
+      expect(mockClient.chat.postMessage.called).to.be.false;
+    });
+
+    it('includes approaching-limit warning in context for manual input', async () => {
+      // Force approaching-limit
+      mockUsageTracker.isApproachingLimit.returns(true);
+      mockUsageTracker.getUsageMessage.returns('You have only 1 draw left');
+
+      const raw = 'Alice\nBob';
+      const view = buildViewPayload(nameDrawApp, raw);
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      // choose deterministic index
+      sinon.stub(nameDrawApp, 'getRandomInt').returns(0);
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      const payload = mockClient.chat.postMessage.getCall(0).args[0];
+      const context = payload.blocks[1].elements[0].text;
+      expect(context).to.contain('⚠️');
+      expect(context).to.contain('You have only 1 draw left');
+    });
+
+    it('logs an error when chat.postMessage fails', async () => {
+      const raw = 'Alice\nBob';
+      const view = buildViewPayload(nameDrawApp, raw);
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      // make postMessage fail
+      mockClient.chat.postMessage.rejects(new Error('post failed'));
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      expect(mockLogger.error.called).to.be.true;
+    });
   });
 });
