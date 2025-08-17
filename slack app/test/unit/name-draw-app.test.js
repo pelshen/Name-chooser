@@ -169,5 +169,31 @@ describe('Name Draw App', () => {
       // The error should be logged (either from usage check failure or modal opening failure)
       expect(mockLogger.error.called).to.be.true;
     });
+    
+    it('should display approaching-limit warning and track Analytics.usageLimitWarning with correct limit', async () => {
+      const triggerId = 'test-trigger';
+      const nearLimitUsage = { ...usageData.freeUserUsage, usageCount: 4, planType: 'FREE' };
+      mockUsageTracker.canUserDraw.resolves({ allowed: true, usage: nearLimitUsage, limit: 5 });
+      mockUsageTracker.isApproachingLimit.returns(true);
+
+      await nameDrawApp.triggerModal(triggerId, null, false, mockClient, mockLogger, testUsers.user1.id, testTeams.team1.id);
+
+      // Validate the views.open payload includes a warning block
+      expect(mockClient.views.open.calledOnce).to.be.true;
+      const callArgs = mockClient.views.open.getCall(0).args[0];
+      const blocks = callArgs.view.blocks;
+      const warning = blocks.find(b => b.type === 'section' && b.text && b.text.text && b.text.text.includes('⚠️'));
+      expect(warning).to.exist;
+
+      // Validate analytics warning uses the limit from canUserDraw
+      expect(mockAnalytics.Analytics.usageLimitWarning.calledWith(
+        testUsers.user1.id,
+        testTeams.team1.id,
+        nearLimitUsage.planType,
+        nearLimitUsage.usageCount,
+        5,
+        sinon.match.object
+      )).to.be.true;
+    });
   });
 });
