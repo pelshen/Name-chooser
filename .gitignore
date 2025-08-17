@@ -28,7 +28,7 @@ Thumbs.db
 .serverless/
 
 # Coverage reports
-/coverage/
+**/coverage/
 
 # IDEs and editors
 .vscode/
