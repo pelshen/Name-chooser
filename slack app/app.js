@@ -14,6 +14,9 @@ const expressReceiver = new ExpressReceiver({
   scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read', 'channels:join'],
   installationStore: installationStore,
   processBeforeResponse: true,
+  installerOptions: {
+    directInstall: true,
+  },
 });
 
 const app = new App({
