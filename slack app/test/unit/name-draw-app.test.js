@@ -321,5 +321,28 @@ describe('Name Draw App', () => {
 
       expect(mockLogger.error.called).to.be.true;
     });
+
+    it('caps extremely large manual input to 200 items and warns', async () => {
+      // Build 210 items
+      const names = Array.from({ length: 210 }, (_, i) => `Name${i + 1}`);
+      const raw = names.join('\n');
+      const view = buildViewPayload(nameDrawApp, raw);
+      const body = { user: { id: testUsers.user1.id }, team: { id: testTeams.team1.id } };
+
+      // deterministic selection
+      sinon.stub(nameDrawApp, 'getRandomInt').returns(0);
+
+      await nameDrawApp.manualViewSubmission({ ack, body, view, client: mockClient, logger: mockLogger });
+
+      // Validate message payload and cap warning
+      const payload = mockClient.chat.postMessage.getCall(0).args[0];
+      const context = payload.blocks[1].elements[0].text;
+      expect(context).to.contain('Input capped to first 200 items (210 provided).');
+
+      // Analytics should reflect capped size of 200
+      const drawArgs = mockAnalytics.Analytics.drawExecuted.getCall(0).args[0];
+      expect(drawArgs.drawSize).to.equal(200);
+      expect(drawArgs.properties.input_items_count).to.equal(200);
+    });
   });
 });
