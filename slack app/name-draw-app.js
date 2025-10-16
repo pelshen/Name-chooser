@@ -1,6 +1,9 @@
 import { canUserDraw, incrementUsage, getUsageMessage, isApproachingLimit } from './usageTracker.js';
 import { Analytics } from './analytics.js';
 
+// Cap for manual input items to avoid excessive payloads
+const MAX_MANUAL_INPUT_ITEMS = 200;
+
 /**
  * Name Draw App for Slack
  * This class encapsulates all the functionality for the Name Draw app
@@ -405,7 +408,7 @@ export class NameDrawApp {
       const updatedUsage = await incrementUsage(user, teamId, usage.planType);
 
       const rawTextInput = view['state']['values'][this.manualInputBlockId][this.manualInputActionId]['value'];
-      const inputArray = rawTextInput
+      let inputArray = rawTextInput
         .split(/\r?\n/)
         .map((val) => val.trim())
         .filter((val) => val.length > 0);
@@ -418,6 +421,16 @@ export class NameDrawApp {
           }
         });
         return;
+      }
+      // Enforce cap on number of items; warn and track if capped
+      let wasCapped = false;
+      const originalCount = inputArray.length;
+      if (inputArray.length > MAX_MANUAL_INPUT_ITEMS) {
+        inputArray = inputArray.slice(0, MAX_MANUAL_INPUT_ITEMS);
+        wasCapped = true;
+        try {
+          Analytics.largeDrawAttempted(user, teamId, updatedUsage.planType, originalCount, { input_capped_to: MAX_MANUAL_INPUT_ITEMS });
+        } catch {}
       }
       const reason = view['state']['values'][this.reasonInputBlockId][this.reasonInputActionId]['value'];
       const conversation = view['state']['values'][this.conversationSelectBlockId][this.conversationSelectActionId];
@@ -457,6 +470,9 @@ export class NameDrawApp {
         `${index === 0 ? '' : prev + (index === arr.length - 1 ? ' and ' : ', ')}${curr}`,
         '');
       let contextMsg = `${inputList} were included in the draw. Draw performed by <@${user}>.`;
+      if (wasCapped) {
+        contextMsg += `\n\n⚠️ Input capped to first ${MAX_MANUAL_INPUT_ITEMS} items (${originalCount} provided).`;
+      }
       
       // Add usage info if approaching limit (only for free users after this draw)
       if (isApproachingLimit(updatedUsage)) {
