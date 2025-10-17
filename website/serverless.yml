@@ -27,6 +27,7 @@ provider:
     SESSION_TABLE: name-draw-${sls:stage}_${env:SESSION_TABLE}
     ACCOUNT_TABLE: name-draw-${sls:stage}_${env:ACCOUNT_TABLE}
     STAGE: ${self:provider.stage}
+    VITE_SLACK_INSTALL_HOST: ${param:host}
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true

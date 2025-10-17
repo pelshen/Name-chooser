@@ -1,3 +1,5 @@
+import { getSlackInstallUrl } from '../utils/slack';
+
 export default function HowItWorks() {
   return (
     <section id="how-it-works" className="py-20 bg-gray-50 dark:bg-gray-800">
@@ -32,7 +34,7 @@ export default function HowItWorks() {
         
         <div className="mt-16 text-center">
           <a
-            href="https://slack.com/apps"
+            href={getSlackInstallUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-white hover:bg-accent1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 transition-colors"

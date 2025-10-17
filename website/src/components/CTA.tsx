@@ -1,3 +1,5 @@
+import { getSlackInstallUrl } from '../utils/slack';
+
 export default function CTA() {
   return (
     <section className="py-20 bg-primary">
@@ -9,7 +11,7 @@ export default function CTA() {
           Join thousands of teams using Name Draw to make random selections fair, fun, and efficient.
         </p>
         <a
-          href="https://slack.com/apps"
+          href={getSlackInstallUrl()}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-base font-medium text-primary hover:bg-accent1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary transition-colors"

@@ -1,3 +1,5 @@
+import { getSlackInstallUrl } from '../utils/slack';
+
 export default function Hero() {
   return (
     <section className="pt-32 pb-20 md:pt-40 md:pb-28 bg-gradient-to-b from-accent1/10 to-white dark:from-gray-900 dark:to-gray-800">
@@ -12,7 +14,7 @@ export default function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <a
-                href="https://slack.com/apps"
+                href={getSlackInstallUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-white hover:bg-accent1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 transition-colors"
