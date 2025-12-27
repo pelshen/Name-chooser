@@ -16,9 +16,9 @@ export default function Header() {
           <Link to="/#how-it-works" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             How it works
           </Link>
-          <Link to="/#pricing" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
+          {/* <Link to="/#pricing" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Pricing
-          </Link>
+          </Link> */}
           <Link to="/blog" className="text-accent2 hover:text-primary dark:text-gray-300 dark:hover:text-white transition-colors">
             Blog
           </Link>

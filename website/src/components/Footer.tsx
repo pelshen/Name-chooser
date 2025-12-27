@@ -28,11 +28,11 @@ export default function Footer() {
                   How It Works
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/#pricing" className="text-accent2 hover:text-primary dark:text-gray-400 dark:hover:text-white transition-colors">
                   Pricing
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
           
