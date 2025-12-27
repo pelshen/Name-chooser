@@ -27,7 +27,7 @@
     "@types/react": "^18.0.25",
     "eslint": "^9.9.0",
     "prettier": "^3.0.2",
-    "serverless": "^4.11.1",
+    "serverless": "^4.28.0",
     "serverless-finch": "^4.0.4",
     "typescript": "^5.1.6"
   },

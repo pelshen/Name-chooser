@@ -46,7 +46,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.38",
-    "serverless": "^4.0.0",
+    "serverless": "^4.28.0",
     "serverless-cloudfront-invalidate": "^1.12.2",
     "serverless-dynamodb": "^0.2.56",
     "serverless-offline": "^14.0.0",
