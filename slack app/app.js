@@ -11,11 +11,22 @@ const expressReceiver = new ExpressReceiver({
   clientSecret: process.env.SLACK_CLIENT_SECRET,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   stateSecret: '979ad718-cd06-4ab2-8c13-ad2bf04da98b',
-  scopes: ['chat:write', 'commands', 'channels:history', 'groups:history', 'im:history', 'mpim:history', 'usergroups:read', 'channels:join'],
+  scopes: [
+    'chat:write',
+    'commands',
+    'channels:history',
+    'groups:history',
+    'im:history',
+    'mpim:history',
+    'usergroups:read',
+    'channels:join',
+  ],
   installationStore: installationStore,
   processBeforeResponse: true,
+  redirectUri: process.env.HOST_URL + '/slack/oauth_redirect',
   installerOptions: {
     directInstall: true,
+    redirectUriPath: '/slack/oauth_redirect',
   },
 });
 

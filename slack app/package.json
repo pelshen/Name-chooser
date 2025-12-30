@@ -25,6 +25,7 @@
     "chai": "^5.2.0",
     "esmock": "^2.7.1",
     "mocha": "^11.3.0",
+    "serverless-domain-manager": "^8.0.0",
     "serverless-dynamodb": "^0.2.54",
     "serverless-offline": "^14.4.0",
     "sinon": "^20.0.0"

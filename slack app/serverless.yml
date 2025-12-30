@@ -3,6 +3,17 @@ org: pelshen
 app: name-draw
 service: name-draw
 
+stages:
+  dev:
+    params:
+      domainPrefix: dev.
+  prod:
+    params:
+      domainPrefix: null
+  default:
+    params:
+      domainPrefix: null
+
 provider:
   name: aws
   region: eu-west-2
@@ -14,6 +25,7 @@ provider:
     SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
     SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
     STAGE: ${self:provider.stage}
+    HOST_URL: ${env:HOST_URL}
     ACCOUNT_TABLE: name-draw-${sls:stage}_${env:ACCOUNT_TABLE}
     POSTHOG_API_KEY: ${env:POSTHOG_API_KEY, ''}
     POSTHOG_HOST: ${env:POSTHOG_HOST, ''}
@@ -60,7 +72,7 @@ resources:
 plugins:
   - serverless-dynamodb
   - serverless-offline
-
+  - serverless-domain-manager
 package:
   individually: true
   patterns:
@@ -74,6 +86,14 @@ package:
     - "node_modules/**"
 
 custom:
+  customDomain:
+    domainName: ${param:domainPrefix}slack.name-draw.com
+    basePath: ""
+    apiType: rest
+    endpointType: EDGE
+    certificateArn: arn:aws:acm:us-east-1:992382840817:certificate/4fd0ce57-afc5-49ab-a6f0-f2ecdfda9ab0
+    hostedZoneId: Z0171226N8YWQMB90C62
+    autoDomain: true
   serverless-dynamodb:
     start:
       migrate: true
