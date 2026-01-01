@@ -1,9 +1,11 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { useEffect, useState } from "react";
-import { LoginButton } from "@/components/LoginButton";
-import type { AccountUser } from "@/types";
-import { InfoIcon } from "@/components/InfoIcon";
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { useEffect, useState } from 'react';
+import { LoginButton } from '@/components/LoginButton';
+import type { AccountUser } from '@/types';
+import { InfoIcon } from '@/components/InfoIcon';
+
+const apiHost = import.meta.env.VITE_API_HOST;
 
 function AccountCard({ children }: { children: React.ReactNode }) {
   return (
@@ -22,9 +24,9 @@ export function Account() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/account")
+    fetch(`${apiHost}/api/account`, { credentials: 'include' })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch user");
+        if (!res.ok) throw new Error('Failed to fetch user');
         return res.json();
       })
       .then((data) => {
@@ -32,7 +34,7 @@ export function Account() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Account fetch error:", err);
+        console.error('Account fetch error:', err);
         setLoading(false);
       });
   }, []);
@@ -42,16 +44,26 @@ export function Account() {
     cardContent = (
       <>
         <div className="mb-6 flex justify-center">
-          <span className="inline-block w-10 h-10 border-4 border-purple-400 border-t-transparent rounded-full animate-spin" aria-label="Loading spinner"></span>
+          <span
+            className="inline-block w-10 h-10 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"
+            aria-label="Loading spinner"
+          ></span>
         </div>
-        <div className="text-lg text-gray-300 text-center">Loading your account...</div>
+        <div className="text-lg text-gray-300 text-center">
+          Loading your account...
+        </div>
       </>
     );
   } else if (!user) {
     cardContent = (
       <>
-        <h1 className="text-2xl font-bold text-white mb-4 text-center">You are not signed in</h1>
-        <p className="text-gray-300 text-center mb-6">To view your account, please sign in with Slack using the button below.</p>
+        <h1 className="text-2xl font-bold text-white mb-4 text-center">
+          You are not signed in
+        </h1>
+        <p className="text-gray-300 text-center mb-6">
+          To view your account, please sign in with Slack using the button
+          below.
+        </p>
         <LoginButton />
       </>
     );
@@ -65,32 +77,44 @@ export function Account() {
             className="w-24 h-24 rounded-full border-4 border-purple-500 shadow-lg mb-6"
           />
         ) : null}
-        <h1 className="text-3xl font-bold text-white mb-6 text-center">Your Account</h1>
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">
+          Your Account
+        </h1>
         <div className="space-y-4 w-full">
           <div>
             <span className="block text-gray-400 text-sm">Name</span>
-            <span className="block text-lg text-white font-semibold">{user.name}</span>
+            <span className="block text-lg text-white font-semibold">
+              {user.name}
+            </span>
           </div>
           <div>
             <span className="block text-gray-400 text-sm">Email</span>
-            <span className="block text-lg text-white font-semibold">{user.email}</span>
+            <span className="block text-lg text-white font-semibold">
+              {user.email}
+            </span>
           </div>
           <div>
             <span className="block text-gray-400 text-sm">Slack User ID</span>
-            <span className="block text-lg text-white font-semibold">{user.user_id}</span>
+            <span className="block text-lg text-white font-semibold">
+              {user.user_id}
+            </span>
           </div>
           <div>
             <span className="block text-gray-400 text-sm">Slack Team ID</span>
-            <span className="block text-lg text-white font-semibold">{user.team_id}</span>
+            <span className="block text-lg text-white font-semibold">
+              {user.team_id}
+            </span>
           </div>
           <div>
             <span className="block text-gray-400 text-sm">Plan</span>
             <span className="block text-lg text-white font-semibold flex items-center gap-2">
               {user.plan}
               <InfoIcon
-                message={user.plan === 'FREE'
-                  ? 'Limited to 3 uses per user per month'
-                  : 'Unlimited uses for all users in workspace'}
+                message={
+                  user.plan === 'FREE'
+                    ? 'Limited to 3 uses per user per month'
+                    : 'Unlimited uses for all users in workspace'
+                }
               />
               {user.plan === 'FREE' && (
                 <a

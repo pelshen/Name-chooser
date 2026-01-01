@@ -6,13 +6,21 @@ service: name-draw-marketing
 stages:
   dev:
     params:
-      host: https://d3pq1kealhouid.cloudfront.net/
+      apiHost: https://dev.api.name-draw.com/
+      siteHost: https://dev.name-draw.com
+      domainPrefix: dev.
+      slackClientId: '3901161718116.9240436968960'
+      slackClientSecret: bf481fb85bb78398acc0418ef1e8df15
   prod:
     params:
-      host: https://name-draw.com/
+      apiHost: https://api.name-draw.com/
+      siteHost: https://name-draw.com
+      domainPrefix: null
+      slackClientId: '3901161718116.3922797710336'
+      slackClientSecret: 0420c385dcaa8b41ebbb6278f0857ebd
   default:
     params:
-      host: https://localhost:3000/
+      apiHost: https://localhost:3000/
 
 provider:
   name: aws
@@ -20,14 +28,14 @@ provider:
   stage: ${opt:stage, 'local'}
   region: ${opt:region, 'eu-west-2'}
   environment:
-    SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
-    SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
-    SLACK_REDIRECT_HOST: ${param:host}
+    SLACK_CLIENT_ID: ${param:slackClientId}
+    SLACK_CLIENT_SECRET: ${param:slackClientSecret}
+    SLACK_REDIRECT_HOST: ${param:apiHost}
+    SITE_HOST: ${param:siteHost}
     SESSION_SECRET: ${env:SESSION_SECRET}
     SESSION_TABLE: name-draw-${sls:stage}_${env:SESSION_TABLE}
     ACCOUNT_TABLE: name-draw-${sls:stage}_${env:ACCOUNT_TABLE}
     STAGE: ${self:provider.stage}
-    VITE_SLACK_INSTALL_HOST: ${param:host}
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true
@@ -42,36 +50,24 @@ provider:
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*
 
+constructs:
+  site:
+    type: single-page-app
+    path: dist
+    domain: ${param:domainPrefix}name-draw.com
+    certificate: arn:aws:acm:us-east-1:992382840817:certificate/64e61085-f514-4ead-86a5-b1ce00c497d8
+
 custom:
-  cloudfrontInvalidate:
-    - distributionId: ${cf:${self:service}-${self:provider.stage}.CloudFrontDistributionId, 'none'}
-      items:
-        - '/*'
   siteName: ${self:service}-${self:provider.stage}
-  client:
-    bucketName: ${self:custom.siteName}-website
-    distributionFolder: dist
-    indexDocument: index.html
-    errorDocument: index.html # For SPA routing
-  allowedOrigins: ${param:host}
-  s3Sync:
-    - bucketName: ${self:custom.client.bucketName}
-      localDir: ${self:custom.client.distributionFolder}
-      deleteRemoved: true
-      acl: public-read
-      params:
-        - index.html:
-            CacheControl: 'no-cache'
-        - '**/*.js':
-            CacheControl: 'public, max-age=31536000'
-        - '**/*.css':
-            CacheControl: 'public, max-age=31536000'
-        - '**/*.png':
-            CacheControl: 'public, max-age=31536000'
-        - '**/*.jpg':
-            CacheControl: 'public, max-age=31536000'
-        - '**/*.svg':
-            CacheControl: 'public, max-age=31536000'
+  allowedOrigins: https://${param:domainPrefix}name-draw.com
+  customDomain:
+    domainName: ${param:domainPrefix}api.name-draw.com
+    basePath: ''
+    apiType: rest
+    endpointType: EDGE
+    certificateArn: arn:aws:acm:us-east-1:992382840817:certificate/64e61085-f514-4ead-86a5-b1ce00c497d8
+    hostedZoneId: Z0171226N8YWQMB90C62
+    autoDomain: true
   serverless-offline:
     httpPort: 4000
     httpsProtocol: .
@@ -86,11 +82,10 @@ custom:
       optimizeDbBeforeStartup: false
 
 plugins:
-  - serverless-s3-sync
   - serverless-dynamodb
   - serverless-offline
-  - serverless-cloudfront-invalidate
-
+  - serverless-lift
+  - serverless-domain-manager
 package:
   individually: true
   patterns:
@@ -146,104 +141,6 @@ functions:
 
 resources:
   Resources:
-    WebsiteBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.client.bucketName}
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
-        WebsiteConfiguration:
-          IndexDocument: ${self:custom.client.indexDocument}
-          ErrorDocument: ${self:custom.client.errorDocument}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders:
-                - '*'
-              AllowedMethods:
-                - GET
-                - HEAD
-              AllowedOrigins:
-                - '*'
-              MaxAge: 3000
-        OwnershipControls:
-          Rules:
-            - ObjectOwnership: BucketOwnerPreferred
-
-    WebsiteBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: !Ref WebsiteBucket
-        PolicyDocument:
-          Statement:
-            - Sid: PublicReadGetObject
-              Effect: Allow
-              Principal: '*'
-              Action:
-                - s3:GetObject
-              Resource: arn:aws:s3:::${self:custom.client.bucketName}/*
-
-    CloudFrontDistribution:
-      Type: AWS::CloudFront::Distribution
-      Properties:
-        DistributionConfig:
-          Origins:
-            - DomainName: !GetAtt WebsiteBucket.DomainName
-              Id: Website
-              CustomOriginConfig:
-                HTTPPort: 80
-                HTTPSPort: 443
-                OriginProtocolPolicy: http-only
-            - DomainName: !Sub '${ApiGatewayRestApi}.execute-api.${self:provider.region}.amazonaws.com'
-              Id: Api
-              OriginPath: /${self:provider.stage}
-              CustomOriginConfig:
-                HTTPPort: 80
-                HTTPSPort: 443
-                OriginProtocolPolicy: https-only
-          Enabled: true
-          DefaultRootObject: ${self:custom.client.indexDocument}
-          DefaultCacheBehavior:
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-            TargetOriginId: Website
-            ForwardedValues:
-              QueryString: true
-              Cookies:
-                Forward: none
-            ViewerProtocolPolicy: redirect-to-https
-          CacheBehaviors:
-            - PathPattern: /api/*
-              TargetOriginId: Api
-              AllowedMethods:
-                - DELETE
-                - GET
-                - HEAD
-                - OPTIONS
-                - PATCH
-                - POST
-                - PUT
-              ForwardedValues:
-                QueryString: true
-                Headers:
-                  - Authorization
-                Cookies:
-                  Forward: all
-              ViewerProtocolPolicy: https-only
-          CustomErrorResponses:
-            - ErrorCode: 403
-              ResponseCode: 200
-              ResponsePagePath: /${self:custom.client.errorDocument}
-            - ErrorCode: 404
-              ResponseCode: 200
-              ResponsePagePath: /${self:custom.client.errorDocument}
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-
     SessionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -255,15 +152,21 @@ resources:
           - AttributeName: sessionId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-
-  Outputs:
-    CloudFrontDistributionId:
-      Value: !Ref CloudFrontDistribution
-      Description: CloudFront Distribution ID
-    WebsiteURL:
-      Value: !GetAtt WebsiteBucket.WebsiteURL
-      Description: URL for the website hosted on S3
-    # If using CloudFront
-    CloudFrontURL:
-      Value: !GetAtt CloudFrontDistribution.DomainName
-      Description: CloudFront distribution domain name
+    SiteARecord:
+      Type: AWS::Route53::RecordSet
+      Properties:
+        HostedZoneId: Z0171226N8YWQMB90C62 # Your HostedZoneId
+        Name: ${param:domainPrefix}name-draw.com
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2 # Cloudfront Route53 HostedZoneId. This does not change.
+          DNSName: ${construct:site.cname}
+    SiteAAAARecord:
+      Type: AWS::Route53::RecordSet
+      Properties:
+        HostedZoneId: Z0171226N8YWQMB90C62 # Your HostedZoneId
+        Name: ${param:domainPrefix}name-draw.com
+        Type: AAAA
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2 # Cloudfront Route53 HostedZoneId. This does not change.
+          DNSName: ${construct:site.cname}
