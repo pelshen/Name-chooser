@@ -10,14 +10,14 @@ stages:
       siteHost: https://dev.name-draw.com
       domainPrefix: dev.
       slackClientId: '3901161718116.9240436968960'
-      slackClientSecret: bf481fb85bb78398acc0418ef1e8df15
+      slackClientSecret: ${env:SLACK_CLIENT_SECRET_DEV}
   prod:
     params:
       apiHost: https://api.name-draw.com/
       siteHost: https://name-draw.com
       domainPrefix: null
       slackClientId: '3901161718116.3922797710336'
-      slackClientSecret: 0420c385dcaa8b41ebbb6278f0857ebd
+      slackClientSecret: ${env:SLACK_CLIENT_SECRET}
   default:
     params:
       apiHost: https://localhost:3000/
