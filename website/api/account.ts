@@ -17,18 +17,37 @@ export const handler = async (
   const cookieHeader = event.headers.cookie || event.headers.Cookie || '';
   const cookies = parseCookie(cookieHeader);
   const sessionCookie = cookies.session;
+  const responseHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin':
+      process.env.SITE_HOST || 'https://name-draw.com',
+    'Access-Control-Allow-Credentials': true,
+  };
+
   if (!sessionCookie) {
-    return { statusCode: 401, body: 'Not authenticated' };
+    return {
+      statusCode: 401,
+      headers: responseHeaders,
+      body: 'Not authenticated',
+    };
   }
 
   const [sessionId, sessionSig] = sessionCookie.split('.');
   if (signSession(sessionId) !== sessionSig) {
-    return { statusCode: 401, body: 'Invalid session' };
+    return {
+      statusCode: 401,
+      headers: responseHeaders,
+      body: 'Invalid session',
+    };
   }
 
   const session = await getSession(sessionId);
   if (!session) {
-    return { statusCode: 401, body: 'Session not found' };
+    return {
+      statusCode: 401,
+      headers: responseHeaders,
+      body: 'Session not found',
+    };
   }
 
   // Look up the plan for this user's team_id
@@ -42,12 +61,7 @@ export const handler = async (
 
   return {
     statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin':
-        process.env.SITE_HOST || 'https://name-draw.com',
-      'Access-Control-Allow-Credentials': true,
-    },
+    headers: responseHeaders,
     body: JSON.stringify({ user: userWithPlan }),
   };
 };
