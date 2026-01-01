@@ -32,10 +32,10 @@ provider:
   iam:
     role:
       statements:
-        - Effect: "Allow"
+        - Effect: 'Allow'
           Action:
-            - "dynamodb:*"
-          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*"
+            - 'dynamodb:*'
+          Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/name-draw*'
 
 functions:
   slack:
@@ -76,22 +76,22 @@ plugins:
 package:
   individually: true
   patterns:
-    - "!**"
-    - "app.js"
-    - "name-draw-app.js"
-    - "package.json"
-    - "installationStore.js"
-    - "usageTracker.js"
-    - "analytics.js"
-    - "node_modules/**"
+    - '!**'
+    - 'app.js'
+    - 'name-draw-app.js'
+    - 'package.json'
+    - 'installationStore.js'
+    - 'usageTracker.js'
+    - 'analytics.js'
+    - 'node_modules/**'
 
 custom:
   customDomain:
     domainName: ${param:domainPrefix}slack.name-draw.com
-    basePath: ""
+    basePath: ''
     apiType: rest
     endpointType: EDGE
-    certificateArn: arn:aws:acm:us-east-1:992382840817:certificate/4fd0ce57-afc5-49ab-a6f0-f2ecdfda9ab0
+    certificateArn: arn:aws:acm:us-east-1:992382840817:certificate/64e61085-f514-4ead-86a5-b1ce00c497d8
     hostedZoneId: Z0171226N8YWQMB90C62
     autoDomain: true
   serverless-dynamodb:
