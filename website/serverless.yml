@@ -15,7 +15,7 @@ stages:
     params:
       apiHost: https://api.name-draw.com/
       siteHost: https://name-draw.com
-      domainPrefix: null
+      domainPrefix: ''
       slackClientId: '3901161718116.3922797710336'
       slackClientSecret: ${env:SLACK_CLIENT_SECRET}
   default:

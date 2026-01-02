@@ -9,10 +9,10 @@ stages:
       domainPrefix: dev.
   prod:
     params:
-      domainPrefix: null
+      domainPrefix: ''
   default:
     params:
-      domainPrefix: null
+      domainPrefix: ''
 
 provider:
   name: aws
